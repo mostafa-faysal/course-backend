@@ -678,10 +678,36 @@ Endpoints for managing individual lessons within a section.
 - **Video Upload**: `POST /api/upload/video`
 
 ## Phase 6: Enrollment System
-- **Enroll Student**: `POST /api/enrollments`
-- **Student My Courses**: `GET /api/enrollments/my-courses`
-- **Course Enrollment Validation**: `GET /api/enrollments/check/:courseId`
-- **Enrollment Statistics**: `GET /api/enrollments/stats`
+
+### 1. Enroll in Course
+- **Endpoint**: `POST /api/courses/:courseId/enroll`
+- **Authentication**: Required (Student)
+- **Description**: Enrolls a student in a course. If the course is free (`price == 0`), enrollment succeeds. If the course is paid (`price > 0`), it returns a `403 Forbidden` error instructing the student to purchase the course first. Validates that the course exists and is `PUBLISHED`. Automatically initializes `CourseProgress` for the student.
+- **Responses**:
+  - `201 Created`: Successfully enrolled.
+  - `400 Bad Request`: Validation failure (UUID format) or Student is already enrolled in this course.
+  - `401 Unauthorized`: Token missing or invalid.
+  - `403 Forbidden`: Paid courses require purchase before enrollment.
+  - `404 Not Found`: Course not found (or not published).
+
+### 2. Get My Courses
+- **Endpoint**: `GET /api/enrollments/my-courses`
+- **Authentication**: Required (Student)
+- **Description**: Retrieves a list of all courses the authenticated student is enrolled in, sorted by enrollment date descending.
+- **Responses**:
+  - `200 OK`: Returns the list of enrolled courses with progress percentage and course details (title, instructor, thumbnail).
+  - `401 Unauthorized`: Token missing or invalid.
+
+### 3. Get Course Enrollment Stats
+- **Endpoint**: `GET /api/courses/:courseId/enrollments/stats`
+- **Authentication**: Required (Instructor or Admin)
+- **Description**: Retrieves enrollment statistics for a specific course. Instructors can only view stats for courses they own. Admins can view stats for any course.
+- **Responses**:
+  - `200 OK`: Returns the total number of enrollments.
+  - `400 Bad Request`: Validation failure.
+  - `401 Unauthorized`: Token missing or invalid.
+  - `403 Forbidden`: You are not the instructor of this course.
+  - `404 Not Found`: Course not found.
 
 ## Phase 7: Progress Tracking
 - **Track Lesson Completion**: `POST /api/progress/lessons/:lessonId`

@@ -8,9 +8,9 @@ All notable changes to this project will be documented in this file.
 - **Phase 1**: Database Setup & Configuration
 - **Phase 2**: Authentication & User Management
 - **Phase 3**: Core API Services Setup
-- **Phase 4.1**: Categories CRUD
-- **Phase 4.2 - 4.4**: Courses CRUD, Details, Search, Filters, Pagination
-- **Phase 4.5 (In Progress)**: Reviews & Ratings, Related Courses
+- **Phase 4**: Courses CRUD, Details, Search, Filters, Reviews, Related Courses
+- **Phase 5**: Sections & Lessons
+- **Phase 6**: Enrollment System
 
 ### Added
 - **Create Course API (`POST /api/courses`)**: Allows instructors to create courses with validation.
@@ -40,6 +40,9 @@ All notable changes to this project will be documented in this file.
 - **Update Section API (`PUT /api/courses/:courseId/sections/:sectionId`)**: Allows course instructor or Admin to update a section title or order, with transaction-based sequence shifting.
 - **`optionalAuth` middleware**: Added for endpoints requiring conditional authentication.
   - *(Files modified: `section.validator.ts`, `section.service.ts`, `section.controller.ts`, `section.routes.ts`, `course.routes.ts`, `test-section-api.ts`, `API_DOCUMENTATION.md`, `PROJECT_PROGRESS.md`)*
+- **Enroll Student API (`POST /api/courses/:courseId/enroll`)**: Implemented student enrollment logic. Includes strict business logic allowing free courses to enroll instantly while explicitly preventing enrollment in paid courses (`price > 0`) until the Phase 9/10 Orders/Payment gateways are built, returning a localized 403 error. 
+- **Get My Courses API (`GET /api/enrollments/my-courses`)**: Retrieves all courses a student is enrolled in along with progress percentage.
+- **Get Course Enrollment Stats API (`GET /api/courses/:courseId/enrollments/stats`)**: Retrieves total enrollment numbers securely for instructors (owners only) and admins.
 
 ### Fixed
 - Fixed runtime crash caused by `ts-node` type issues by migrating the development dev runner to `tsx watch`.

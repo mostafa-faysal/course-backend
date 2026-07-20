@@ -5,6 +5,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import homeRoutes from './routes/home.routes';
 import categoryRoutes from './routes/category.routes';
 import courseRoutes from './routes/course.routes';
+import enrollmentRoutes from './routes/enrollment.routes';
 import { setupSwagger } from './config/swagger';
 
 const app: Application = express();
@@ -29,6 +30,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.use('/api/home', homeRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api', enrollmentRoutes);
 
 // Global Error Handling Middleware
 app.use(errorHandler);
