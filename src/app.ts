@@ -6,6 +6,12 @@ import homeRoutes from './routes/home.routes';
 import categoryRoutes from './routes/category.routes';
 import courseRoutes from './routes/course.routes';
 import enrollmentRoutes from './routes/enrollment.routes';
+import progressRoutes from './routes/progress.routes';
+import favoriteRoutes from './routes/favorite.routes';
+import cartRoutes from './routes/cart.routes';
+import orderRoutes from './routes/order.routes';
+import paymentRoutes from './routes/payment.routes';
+import instructorRoutes from './routes/instructor.routes';
 import { setupSwagger } from './config/swagger';
 
 const app: Application = express();
@@ -31,6 +37,12 @@ app.use('/api/home', homeRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api', enrollmentRoutes);
+app.use('/api/courses/:courseId/progress', progressRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/instructor', instructorRoutes);
 
 // Global Error Handling Middleware
 app.use(errorHandler);

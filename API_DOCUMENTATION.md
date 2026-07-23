@@ -688,26 +688,6 @@ Endpoints for managing individual lessons within a section.
   - `400 Bad Request`: Validation failure (UUID format) or Student is already enrolled in this course.
   - `401 Unauthorized`: Token missing or invalid.
   - `403 Forbidden`: Paid courses require purchase before enrollment.
-  - `404 Not Found`: Course not found (or not published).
-
-### 2. Get My Courses
-- **Endpoint**: `GET /api/enrollments/my-courses`
-- **Authentication**: Required (Student)
-- **Description**: Retrieves a list of all courses the authenticated student is enrolled in, sorted by enrollment date descending.
-- **Responses**:
-  - `200 OK`: Returns the list of enrolled courses with progress percentage and course details (title, instructor, thumbnail).
-  - `401 Unauthorized`: Token missing or invalid.
-
-### 3. Get Course Enrollment Stats
-- **Endpoint**: `GET /api/courses/:courseId/enrollments/stats`
-- **Authentication**: Required (Instructor or Admin)
-- **Description**: Retrieves enrollment statistics for a specific course. Instructors can only view stats for courses they own. Admins can view stats for any course.
-- **Responses**:
-  - `200 OK`: Returns the total number of enrollments.
-  - `400 Bad Request`: Validation failure.
-  - `401 Unauthorized`: Token missing or invalid.
-  - `403 Forbidden`: You are not the instructor of this course.
-  - `404 Not Found`: Course not found.
 
 ## Phase 7: Progress Tracking
 - **Track Lesson Completion**: `POST /api/progress/lessons/:lessonId`
@@ -715,15 +695,152 @@ Endpoints for managing individual lessons within a section.
 - **Continue Watching**: `GET /api/progress/courses/:courseId/continue`
 
 ## Phase 8: Favorites System
-- **Add Course To Favorites**: `POST /api/favorites/:courseId`
-- **Remove Course From Favorites**: `DELETE /api/favorites/:courseId`
-- **Get Student Favorites**: `GET /api/favorites`
+
+### 1. Add Course to Favorites
+- **URL**: `/api/favorites/:courseId`
+- **Method**: `POST`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Adds a course to the student's favorites (wishlist). Operation is Idempotent.
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "message": "Course added to favorites successfully"
+  }
+  ```
+- **Error Responses**:
+  - `401 Unauthorized`
+  - `403 Forbidden`
+  - `404 Not Found` (If course does not exist or is not PUBLISHED)
+
+### 2. Remove Course from Favorites
+- **URL**: `/api/favorites/:courseId`
+- **Method**: `DELETE`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Removes a course from favorites. Operation is Idempotent.
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "message": "Course removed from favorites successfully"
+  }
+  ```
+- **Error Responses**:
+  - `401 Unauthorized`
+  - `403 Forbidden`
+
+### 3. Get Student Favorites
+- **URL**: `/api/favorites`
+- **Method**: `GET`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Retrieves all favorite courses for the student, ordered by most recently added.
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "total": 1,
+      "favorites": [
+        {
+          "id": "uuid",
+          "course_id": "uuid",
+          "created_at": "2024-01-01T00:00:00.000Z",
+          "is_available": true,
+          "course": {
+            "id": "uuid",
+            "title": "Course Title",
+            "description": "...",
+            "price": 100,
+            "status": "PUBLISHED"
+          }
+        }
+      ]
+    }
+  }
+  ```
+
+### 4. Check Favorite Status
+- **URL**: `/api/favorites/:courseId/status`
+- **Method**: `GET`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Checks if a specific course is in the student's favorites.
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "is_favorite": true
+    }
+  }
+  ```
+
 
 ## Phase 9: Shopping Cart System
-- **Add Course To Cart**: `POST /api/cart/:courseId`
-- **Remove Course From Cart**: `DELETE /api/cart/:courseId`
-- **Get Cart**: `GET /api/cart`
-- **Cart Validation**: `GET /api/cart/validate`
+
+### 1. Add Course To Cart
+- **URL**: `/api/cart/items`
+- **Method**: `POST`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Adds a course to the student's shopping cart. Creates the cart if it doesn't exist.
+- **Request Body**:
+  ```json
+  {
+    "courseId": "uuid"
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "message": "Course added to cart successfully"
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Already enrolled in the course.
+  - `401 Unauthorized`: Token missing or invalid.
+  - `403 Forbidden`: Not a student.
+  - `404 Not Found`: Course not found or not published.
+  - `409 Conflict`: Course is already in the cart.
+
+### 2. Remove Course From Cart
+- **URL**: `/api/cart/items/:courseId`
+- **Method**: `DELETE`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Removes a specific course from the student's cart.
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "message": "Course removed from cart successfully"
+  }
+  ```
+- **Error Responses**:
+  - `404 Not Found`: Item not found in cart.
+
+### 3. Get Student Cart
+- **URL**: `/api/cart`
+- **Method**: `GET`
+- **Auth**: Required (`STUDENT`)
+- **Description**: Retrieves the student's current cart items, total price, and total courses count.
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "total_price": 80,
+      "total_courses_count": 1,
+      "items": [
+        {
+          "id": "uuid",
+          "title": "Course Title",
+          "thumbnail": "url",
+          "price": 100,
+          "discount_price": 80
+        }
+      ]
+    }
+  }
+  ```
 
 ## Phase 10: Orders & Payments
 - **Create Order**: `POST /api/orders`
@@ -731,11 +848,81 @@ Endpoints for managing individual lessons within a section.
 - **Payment Verification**: `POST /api/payments/verify`
 - **Order History**: `GET /api/orders`
 
+## Phase 10: Orders & Payments
+
+### Create Order
+**Method:** POST
+**URL:** `/api/orders`
+**Authentication:** Student
+**Description:** Creates an order from the user's cart. Calculates active prices, saves them in order items, sets order and payment status to PENDING. Returns the newly created order.
+
+### Verify Payment
+**Method:** POST
+**URL:** `/api/payments/verify`
+**Authentication:** Student
+**Description:** Mocks the payment verification process. If success is true, marks payment SUCCESS, order PAID, clears cart, and automatically creates course enrollments.
+**Body:**
+```json
+{
+  "orderId": "uuid",
+  "success": true
+}
+```
+
+### Get Order History
+**Method:** GET
+**URL:** `/api/orders/history`
+**Authentication:** Student
+**Description:** Retrieves all orders belonging to the authenticated student, including items and payment details.
+
 ## Phase 11: Instructor Dashboard
-- **Instructor Courses**: `GET /api/instructor/courses`
-- **Course Statistics**: `GET /api/instructor/courses/:courseId/stats`
-- **Revenue Statistics**: `GET /api/instructor/revenue`
-- **Student Analytics**: `GET /api/instructor/students`
+
+**All endpoints require authentication and INSTRUCTOR role.**
+
+### Instructor Profile
+**Method:** GET
+**URL:** `/api/instructor/profile`
+**Description:** Retrieves the basic profile information of the authenticated instructor.
+
+### Dashboard Overview
+**Method:** GET
+**URL:** `/api/instructor/dashboard`
+**Description:** Retrieves top-level aggregate statistics including total courses, published courses, draft courses, total students, total revenue, average rating, total reviews, and the 5 most recent enrollments.
+
+### Instructor Courses
+**Method:** GET
+**URL:** `/api/instructor/courses`
+**Query Parameters:** `page`, `limit`, `search`, `sort`, `order`
+**Description:** Retrieves a paginated list of courses taught by the instructor with enrollment count, average rating, and revenue per course.
+
+### Course Statistics
+**Method:** GET
+**URL:** `/api/instructor/courses/:courseId/stats`
+**Description:** Retrieves detailed statistics for a specific course owned by the instructor. Returns 404 if the course is not found or not owned by the instructor.
+
+### Revenue Statistics
+**Method:** GET
+**URL:** `/api/instructor/revenue`
+**Query Parameters:** `period` (month, year, all - default is all)
+**Description:** Calculates total revenue generated across all courses from completed orders, filtered by the given period.
+
+### Student Analytics
+**Method:** GET
+**URL:** `/api/instructor/students`
+**Query Parameters:** `page`, `limit`, `search`, `sort`, `order`
+**Description:** Retrieves a paginated list of unique students enrolled in the instructor's courses, along with total purchased courses, completed courses, average progress, and last active date.
+
+### Latest Enrollments
+**Method:** GET
+**URL:** `/api/instructor/enrollments/latest`
+**Query Parameters:** `page`, `limit`
+**Description:** Retrieves the most recent enrollments across all courses owned by the instructor.
+
+### Reviews Overview
+**Method:** GET
+**URL:** `/api/instructor/reviews`
+**Query Parameters:** `page`, `limit`, `search`, `sort`, `order`
+**Description:** Retrieves recent reviews left on the instructor's courses.
 
 ## Phase 12: Admin Dashboard
 - **Manage Users**: `GET /api/admin/users`, `PUT /api/admin/users/:id`

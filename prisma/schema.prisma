@@ -36,6 +36,12 @@ enum ReviewStatus {
   HIDDEN
 }
 
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model User {
   id              String         @id @default(uuid())
   full_name       String
@@ -138,6 +144,7 @@ model Enrollment {
   course_id           String
   progress_percentage Float    @default(0.0)
   enrolled_at         DateTime @default(now())
+  completed_at        DateTime?
 
   // Relations
   student             User     @relation(fields: [student_id], references: [id])
@@ -177,10 +184,10 @@ model OrderItem {
 }
 
 model Payment {
-  id              String   @id @default(uuid())
-  order_id        String   @unique
+  id              String        @id @default(uuid())
+  order_id        String        @unique
   payment_method  String
-  status          String
+  status          PaymentStatus @default(PENDING)
   transaction_id  String?
   created_at      DateTime @default(now())
 
@@ -215,6 +222,7 @@ model WishlistItem {
   id          String   @id @default(uuid())
   wishlist_id String
   course_id   String
+  created_at  DateTime @default(now())
 
   // Relations
   wishlist    Wishlist @relation(fields: [wishlist_id], references: [id])
@@ -298,6 +306,8 @@ model LessonProgress {
   enrollment_id String
   lesson_id     String
   is_completed  Boolean    @default(false)
+  watch_position Int       @default(0)
+  completed_at  DateTime?
 
   // Relations
   enrollment    Enrollment @relation(fields: [enrollment_id], references: [id])

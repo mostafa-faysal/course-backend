@@ -1,5 +1,50 @@
 # Changelog
 
+## [Phase 11] Instructor Dashboard
+- Implemented `InstructorService` utilizing complex Prisma aggregates to power the dashboard.
+- Built strict business logic preventing cross-instructor access and filtering metrics properly.
+- Added `GET /api/instructor/profile` for basic instructor details.
+- Added `GET /api/instructor/dashboard` with high-level aggregates (revenue, students, ratings, etc.).
+- Added `GET /api/instructor/courses` with pagination, search, sorting and per-course aggregates.
+- Added `GET /api/instructor/courses/:courseId/stats` to dive deeper into a specific course.
+- Added `GET /api/instructor/revenue` with time period filtering.
+- Added `GET /api/instructor/students` for detailed student analytics (progress, purchase counts).
+- Added `GET /api/instructor/enrollments/latest` and `GET /api/instructor/reviews` for recent activity monitoring.
+- All collection endpoints support full `page`, `limit`, `search`, `sort`, and `order` parameters.
+
+## [Phase 10] Orders & Payments
+- Implemented `OrderService` for creating orders within a Prisma transaction, preventing creating orders for empty carts, saving active course prices inside `OrderItem`, and protecting against double enrollments.
+- Added `MockPaymentProvider` to abstract and simulate payment gateway responses securely.
+- Implemented `PaymentService` to reliably handle payment verification using Prisma transactions.
+- Added strict business rules: preventing verify action on same order twice, restricting verify to original order owner, clearing student cart, creating course enrollments automatically upon successful payment.
+- Added `POST /api/orders` to checkout cart into an order (PENDING).
+- Added `POST /api/payments/verify` to mock process the payment securely and execute the success/failure workflows.
+- Added `GET /api/orders/history` to retrieve order history for students.
+
+## [Phase 9] Shopping Cart System
+- Added `CartService` to handle `Cart` and `CartItem` operations within Prisma transactions.
+- Added internal `validateCart` method for future checkout compatibility.
+- Handled Prisma constraints (`P2002`) to ensure duplicate-free add to cart.
+- Added `POST /api/cart/items` to add courses to shopping cart.
+- Added `DELETE /api/cart/items/:courseId` to remove courses from shopping cart.
+- Added `GET /api/cart` to fetch student's shopping cart and dynamic calculation of total price.
+## [Phase 8] Favorites System
+- Added `created_at` to `WishlistItem` in `schema.prisma`.
+- Implemented `FavoriteService` supporting Idempotent addition and removal.
+- Added `POST /api/favorites/:courseId` to add courses to favorites.
+- Added `DELETE /api/favorites/:courseId` to remove courses from favorites.
+- Added `GET /api/favorites` to fetch student favorites ordered by date added with soft delete/availability checking.
+- Added `GET /api/favorites/:courseId/status` to quickly check if a course is favorited.
+
+## [Phase 7] Progress Tracking
+- Added `LessonProgress.watch_position`, `LessonProgress.completed_at`, and `Enrollment.completed_at` to schema.
+- Implemented `ProgressTrackingService` with automatic percentage recalculation relying on `completedLessons == totalLessons`.
+- Added `POST /api/courses/:courseId/progress/lessons/:lessonId/complete` for tracking completions.
+- Added `DELETE /api/courses/:courseId/progress/lessons/:lessonId/complete` for tracking un-completions (preserves analytics and watch position).
+- Added `PUT /api/courses/:courseId/progress/lessons/:lessonId/watch` to update watch position and last watched lesson.
+- Added `GET /api/courses/:courseId/progress` for retrieving total/completed/remaining lessons and timestamps.
+
+
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - 2026-07-19
