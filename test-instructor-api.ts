@@ -145,10 +145,10 @@ async function runTests() {
   });
 
   // Tokens
-  const tokenInst1 = generateToken(instructor1.id, instructor1.role);
-  const tokenInst2 = generateToken(instructor2.id, instructor2.role);
-  const tokenStudent = generateToken(student1.id, student1.role);
-  const tokenAdmin = generateToken(admin1.id, admin1.role);
+  const tokenInst1 = generateToken({ id: instructor1.id, role: instructor1.role });
+  const tokenInst2 = generateToken({ id: instructor2.id, role: instructor2.role });
+  const tokenStudent = generateToken({ id: student1.id, role: student1.role });
+  const tokenAdmin = generateToken({ id: admin1.id, role: admin1.role });
 
   console.log('Test setup complete.\n');
 
