@@ -59,6 +59,18 @@ app.use(express.urlencoded({ extended: true }));
 // Setup Swagger Documentation
 setupSwagger(app);
 
+// Root Route - Welcome & API Documentation Indicator
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'success',
+    message: '🚀 Welcome to Enterprise Online Learning Platform API',
+    documentation: '/api/docs',
+    healthCheck: '/api/health',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health Check Routes
 app.use('/api/health', healthRoutes);
 app.use('/health', healthRoutes);
