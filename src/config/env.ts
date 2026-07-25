@@ -15,8 +15,6 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid connection string'),
   DIRECT_URL: z.string().optional(),
   CORS_ORIGIN: z.string().min(1, 'CORS_ORIGIN is required'),
-  SUPABASE_URL: z.string().optional().default(''),
-  SUPABASE_KEY: z.string().optional().default(''),
 });
 
 const parseResult = envSchema.safeParse(process.env);
@@ -38,10 +36,6 @@ export const config = {
   jwtSecret: env.JWT_SECRET,
   jwtExpiresIn: env.JWT_EXPIRES_IN,
   corsOrigin: env.CORS_ORIGIN,
-  supabase: {
-    url: env.SUPABASE_URL,
-    key: env.SUPABASE_KEY,
-  },
   database: {
     url: env.DATABASE_URL,
   }

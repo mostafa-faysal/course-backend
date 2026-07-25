@@ -1,4 +1,4 @@
-import { Course, Section, Lesson, Prisma } from '@prisma/client';
+import { Course, Section, Lesson, Prisma, CourseStatus, ReviewStatus } from '@prisma/client';
 import { prisma } from '../config/db';
 import { NotificationHelper } from '../helpers/notification.helper';
 
@@ -48,7 +48,7 @@ export class CourseService {
     });
 
     // Notify Admins
-    if (course.status === 'PENDING') {
+    if (course.status === CourseStatus.PENDING) {
       const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
       if (admins.length > 0) {
         await NotificationHelper.sendNewCourseSubmitted(admins.map(a => a.id), course.id, course.title);
@@ -258,7 +258,7 @@ export class CourseService {
       where: {
         category_id: currentCourse.category_id,
         id: { not: courseId },
-        status: 'PUBLISHED',
+        status: CourseStatus.PUBLISHED,
       },
       take: limit,
       orderBy: [
@@ -288,7 +288,7 @@ export class CourseService {
           select: {
             enrollments: true,
             reviews: {
-              where: { status: 'APPROVED' }
+              where: { status: ReviewStatus.APPROVED }
             }
           }
         }
