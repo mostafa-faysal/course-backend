@@ -1,4 +1,5 @@
 import { prisma } from '../config/db';
+import { NotificationHelper } from '../helpers/notification.helper';
 
 export class ReviewService {
   /**
@@ -13,6 +14,9 @@ export class ReviewService {
           course_id: courseId,
         },
       },
+      include: {
+        course: { select: { instructor_id: true } }
+      }
     });
 
     if (!enrollment) {
@@ -49,6 +53,10 @@ export class ReviewService {
         },
       },
     });
+    // Notify Instructor
+    if (enrollment.course?.instructor_id) {
+      await NotificationHelper.sendNewCourseReview(enrollment.course.instructor_id, courseId, data.rating);
+    }
 
     return review;
   }

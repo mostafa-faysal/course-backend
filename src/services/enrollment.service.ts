@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { NotificationHelper } from '../helpers/notification.helper';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ export class EnrollmentService {
     // 1. Verify course exists and is published
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { id: true, status: true, price: true },
+      select: { id: true, status: true, price: true, title: true, instructor_id: true },
     });
 
     if (!course || course.status !== 'PUBLISHED') {
@@ -37,7 +38,7 @@ export class EnrollmentService {
     }
 
     // 4. Create enrollment and initialize course progress
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const newEnrollment = await tx.enrollment.create({
         data: {
           student_id: studentId,
@@ -65,6 +66,10 @@ export class EnrollmentService {
       maxWait: 10000,
       timeout: 15000,
     });
+
+    await NotificationHelper.sendEnrollment(studentId, course.instructor_id, courseId, course.title);
+
+    return result;
   }
 
   /**

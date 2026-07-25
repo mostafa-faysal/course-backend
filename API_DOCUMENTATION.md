@@ -1,945 +1,1565 @@
-# Courses Module
+# API Documentation
 
----
+## Global System Architecture & Security Responses (Production Readiness)
 
-## Category APIs
+### Request Correlation & Traceability (`X-Request-ID`)
+- **Header in Responses:** Every API response now returns an `X-Request-ID` header containing a UUID.
+- **Error Responses:** In case of any error (HTTP 400, 401, 403, 404, 409, 500), the generated JSON payload explicitly embeds `"requestId": "<uuid>"` to allow developers and system admins to trace logs precisely via Winston structured JSON logs.
 
-### Get All Categories
-**Method:** GET
-**URL:** `/api/categories`
-**Description:** Retrieves a list of all categories.
-
-### Get Category by ID
-**Method:** GET
-**URL:** `/api/categories/:id`
-**Description:** Retrieves category details by ID.
-
-### Create Category
-**Method:** POST
-**URL:** `/api/categories`
-**Authentication:** Admin
-**Description:** Creates a new category.
-
-### Update Category
-**Method:** PUT
-**URL:** `/api/categories/:id`
-**Authentication:** Admin
-**Description:** Updates an existing category.
-
-### Delete Category
-**Method:** DELETE
-**URL:** `/api/categories/:id`
-**Authentication:** Admin
-**Description:** Deletes a category.
-
----
-
-## Home APIs
-
-### Get Home Data
-**Method:** GET
-**URL:** `/api/home`
-**Description:** Aggregated endpoint for all home page data.
-
-### Individual Home Endpoints
-- `GET /api/home/hero`
-- `GET /api/home/categories`
-- `GET /api/home/featured-courses`
-- `GET /api/home/top-instructors`
-- `GET /api/home/statistics`
-- `GET /api/home/testimonials`
-- `GET /api/home/faq`
-- `GET /api/home/footer`
-
----
-
-Method:
-POST
-
-URL:
-`/api/courses`
-
-Authentication:
-- Instructor (Currently Public for Phase 4, to be secured later)
-
-Description:
-Creates a new course in the system with initial details. Validates the existence of the instructor and the category.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Request Body:
+### Rate Limiting (Protection Against DDoS & Brute-Force)
+- **Global Limits:** Limited to 100 requests per IP every 15 minutes.
+- **Authentication Routes Limit (`/api/auth/login`, `/api/auth/register`, `/api/auth/change-password`):** Strict maximum of 10 attempts per IP every 15 minutes.
+- **Exceeding Limits Response (HTTP 429 Too Many Requests):**
 ```json
 {
-  "title": "Mastering React 18",
-  "description": "Learn everything about React 18, hooks, context API, and advanced patterns.",
-  "instructor_id": "91df47be-2067-44c3-8790-ea80cd51dc0a",
-  "category_id": "581c867a-7286-41dc-ac45-df9dcc42158c",
-  "price": 49.99,
-  "discount_price": 29.99,
-  "level": "Intermediate",
-  "language": "English",
-  "requirements": [
-    "Basic HTML/CSS",
-    "JavaScript Fundamentals"
-  ],
-  "learning_outcomes": [
-    "Build complex React apps",
-    "Understand React Hooks"
-  ],
-  "status": "DRAFT"
+  "status": "error",
+  "statusCode": 429,
+  "message": "Too many requests, please try again later.",
+  "requestId": "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890"
 }
 ```
 
 ---
 
-## Get All Courses API
+## API and Database Health Check
 
-Method:
-GET
-
-URL:
-`/api/courses`
-
-Authentication:
-- Public (or Admin/Instructor depending on visibility logic later)
-
-Description:
-Retrieves a paginated list of courses with advanced filtering, searching, and sorting capabilities. Returns metadata about the total count and pages.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| page | integer | No | Page number for pagination (default: 1) |
-| limit | integer | No | Number of items per page (default: 10) |
-| search | string | No | Search term to match course title or description |
-| category_id | string (UUID) | No | Filter courses by specific category UUID |
-| instructor_id | string (UUID) | No | Filter courses by specific instructor UUID |
-| level | string | No | Filter courses by difficulty level |
-| language | string | No | Filter courses by course language |
-| min_price | number | No | Filter courses by minimum price |
-| max_price | number | No | Filter courses by maximum price |
-| status | string | No | Filter courses by status (DRAFT, PUBLISHED, HIDDEN) |
-| sort_by | string | No | Field to sort by (price, created_at, title, enrollments) (default: created_at) |
-| sort_order | string | No | Sorting order (asc, desc) (default: desc) |
-
-Request Body:
-```json
-{}
-```
-
----
-
-## Update Course API
-
-Method:
-PUT
-
-URL:
-`/api/courses/:id`
-
-Authentication:
-- Instructor (Must be the course owner)
-- Admin
-
-Description:
-Updates the details of an existing course. Checks both the existence of the course and whether the authenticated user has permission to modify it.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | The unique ID of the course to update |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Request Body:
+- **Endpoint:** `GET /api/health` (also mounted at `GET /health` for Kubernetes/Docker/PM2 probes)
+- **Description:** يفحص حالة تشغيل الخادم واتصاله الفعلي بقاعدة بيانات PostgreSQL عبر استعلام Prisma. في حال فقدان الاتصال بقاعدة البيانات يُرجع السيرفر حالة 503 Service Unavailable لحجب المحادثات التالفة عبر Load Balancers.
+- **Token Required:** No (Public Monitoring Probe)
+- **Headers:** None
+- **Response:**
+  - **200 OK (Healthy & Connected):**
 ```json
 {
-  "title": "Advanced React 18 & Next.js",
-  "price": 59.99
+  "status": "ok",
+  "database": "connected",
+  "uptime": 123.45,
+  "timestamp": "2026-07-25T16:00:00.000Z",
+  "requestId": "uuid"
 }
 ```
-
----
-
-## Delete Course API
-
-Method:
-DELETE
-
-URL:
-`/api/courses/:id`
-
-Authentication:
-- Instructor (Must be the course owner)
-- Admin
-
-Description:
-Deletes a course by its unique ID. Only the Instructor who owns the course or an Admin can perform this action. Handles database relation violations gracefully (returns error if course has active dependencies).
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | The unique ID of the course to delete |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Request Body:
-```json
-{}
-```
-
----
-
-## Course Details API
-
-Method:
-GET
-
-URL:
-`/api/courses/:id`
-
-Authentication:
-- Public
-
-Description:
-Retrieves detailed information of a course including instructor, category, sections, and lessons. Masks the `video_url` for lessons unless `is_free_preview` is true.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | The unique ID of the course to retrieve details for |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Request Body:
-```json
-{}
-```
-
----
-
-## Create Review API
-
-Method:
-POST
-
-URL:
-`/api/courses/:id/reviews`
-
-Authentication:
-- Student (Must be enrolled in the course)
-
-Description:
-Allows a student to add a rating and an optional comment for a course they are enrolled in. A student can only review a course once.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | The unique ID of the course to be reviewed |
-
-Request Body:
+  - **503 Service Unavailable (Database Disconnected):**
 ```json
 {
-  "rating": 5,
-  "comment": "Excellent course! Very helpful."
-}
-```
-
-Responses:
-- `201 Created`: Review successfully added.
-- `400 Bad Request`: Validation error (e.g. rating out of bounds).
-- `401 Unauthorized`: Token missing or invalid.
-- `403 Forbidden`: User is not a student, not enrolled, or already reviewed.
-- `404 Not Found`: Course not found.
-
----
-
-## Get Course Reviews API
-
-Method:
-GET
-
-URL:
-`/api/courses/:id/reviews`
-
-Authentication:
-- Public (Anyone can view reviews)
-
-Description:
-Retrieves a paginated list of all approved reviews for a specific course, along with the average rating and total number of reviews. Includes basic student information for each review.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | The unique ID of the course |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| page | integer | No | Page number for pagination (default: 1) |
-| limit | integer | No | Number of reviews per page (default: 10) |
-
-Responses:
-- `200 OK`: Reviews retrieved successfully along with stats and pagination data.
-- `400 Bad Request`: Validation error for UUID or query parameters.
-- `404 Not Found`: Course not found.
-
----
-
-## Update Review API
-
-Method:
-PUT
-
-URL:
-`/api/courses/:courseId/reviews/:reviewId`
-
-Authentication:
-- Student (Review owner)
-- Admin
-
-Description:
-Allows a student to update his own review. Admin can update any review if required.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| courseId | string (UUID) | Yes | Course ID |
-| reviewId | string (UUID) | Yes | Review ID |
-
-Request Body (Optional fields, at least one required):
-```json
-{
-  "rating": 4,
-  "comment": "Updated review text"
-}
-```
-
-Responses:
-- `200 OK`: Review updated successfully.
-- `400 Bad Request`: Validation error (invalid UUID or body).
-- `401 Unauthorized`: Token missing or invalid.
-- `403 Forbidden`: Not the owner of the review.
-- `404 Not Found`: Review not found.
-
----
-
-## Update Review API
-
-Method:
-PUT
-
-URL:
-`/api/courses/:courseId/reviews/:reviewId`
-
-Authentication:
-- Student (Review owner)
-- Admin
-
-Description:
-Allows a student to update his own review. Admin can update any review if required.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| courseId | string (UUID) | Yes | Course ID |
-| reviewId | string (UUID) | Yes | Review ID |
-
-Request Body (Optional fields, at least one required):
-```json
-{
-  "rating": 4,
-  "comment": "Updated review text"
-}
-```
-
-Responses:
-- `200 OK`: Review updated successfully.
-- `400 Bad Request`: Validation error (invalid UUID or body).
-- `401 Unauthorized`: Token missing or invalid.
-- `403 Forbidden`: Not the owner of the review.
-- `404 Not Found`: Review not found.
-
----
-
-## Delete Review API
-
-Method:
-DELETE
-
-URL:
-`/api/courses/:courseId/reviews/:reviewId`
-
-Authentication:
-- Student (Review owner)
-- Admin
-
-Description:
-Allows a student to delete his own review. Admin can delete any review if required.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| courseId | string (UUID) | Yes | Course ID |
-| reviewId | string (UUID) | Yes | Review ID |
-
-Responses:
-- `200 OK`: Review deleted successfully.
-- `400 Bad Request`: Validation error.
-- `401 Unauthorized`: Token missing or invalid.
-- `403 Forbidden`: Not the owner of the review.
-- `404 Not Found`: Review not found.
-
----
-
-## Course Rating Summary API
-
-Method:
-GET
-
-URL:
-`/api/courses/:id/rating-summary`
-
-Authentication:
-- Public (No token required)
-
-Description:
-Returns the rating summary for a course, including average rating, total reviews, and a distribution breakdown of star ratings (1 to 5).
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | Course ID |
-
-Responses:
-- `200 OK`: Returns the summary.
-- `400 Bad Request`: Invalid course ID format.
-- `404 Not Found`: Course not found.
-
-Example Response:
-```json
-{
-  "status": "success",
-  "message": "Rating summary retrieved successfully",
-  "data": {
-    "average_rating": 4.5,
-    "total_reviews": 120,
-    "rating_distribution": {
-      "5": { "count": 80, "percentage": 66.67 },
-      "4": { "count": 30, "percentage": 25.00 },
-      "3": { "count": 5, "percentage": 4.17 },
-      "2": { "count": 3, "percentage": 2.50 },
-      "1": { "count": 2, "percentage": 1.67 }
-    }
-  }
+  "status": "error",
+  "database": "disconnected",
+  "uptime": 123.45,
+  "timestamp": "2026-07-25T16:00:00.000Z",
+  "requestId": "uuid"
 }
 ```
 
 ---
 
-## Related Courses API
+## Get user profile
 
-Method:
-GET
-
-URL:
-`/api/courses/:id/related?limit=5`
-
-Authentication:
-- Public (No token required)
-
-Description:
-Returns a list of related courses (in the same category), excluding the current course. Only returns `PUBLISHED` courses. Sorted by enrollments and creation date.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| id | string (UUID) | Yes | Course ID |
-| limit | integer | No | Maximum number of courses to return (default: 5) |
-
-Responses:
-- `200 OK`: Returns the related courses array.
-- `400 Bad Request`: Invalid course ID format.
-- `404 Not Found`: Course not found.
-
-Example Response:
-```json
-{
-  "status": "success",
-  "message": "Related courses retrieved successfully",
-  "data": [
-    {
-      "id": "course-uuid",
-      "title": "Another React Course",
-      "price": 49.99,
-      "discount_price": null,
-      "thumbnail": "http://example.com/thumb.jpg",
-      "level": "Intermediate",
-      "instructor": {
-        "id": "instructor-uuid",
-        "full_name": "John Doe",
-        "profile_picture": null
-      },
-      "_count": {
-        "enrollments": 150,
-        "reviews": 25
-      }
-    }
-  ]
-}
-}
-```
+- **Endpoint:** `GET /api/user/profile`
+- **Description:** يجلب بيانات الملف الشخصي الكاملة للمستخدم الحالي (مثل الاسم، الإيميل، الصورة، والسيرة الذاتية). نحتاجه في الفرونت اند لصفحة (حسابي/الملف الشخصي) لعرض بيانات المستخدم وإمكانية تعديلها.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Profile retrieved successfully
 
 ---
 
-## Create Section API
+## Update user profile
 
-Method:
-POST
-
-URL:
-`/api/courses/:courseId/sections`
-
-Authentication:
-- Bearer Token required (`INSTRUCTOR` of the course, or `ADMIN`)
-
-Description:
-Creates a new section for a course. If `sequence_order` is omitted, the section is added to the end. If `sequence_order` is provided, existing sections will be shifted down automatically to make room. Duplicate titles within the same course are rejected.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| courseId | string (UUID) | Yes | Course ID |
-
-Request Body (JSON):
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| title | string | Yes | The title of the section (3 to 150 chars). |
-| sequence_order | integer | No | Position of the section. Auto-assigned if omitted. |
-
-Responses:
-- `201 Created`: Section created successfully.
-- `400 Bad Request`: Validation error or duplicate title.
-- `401 Unauthorized`: Token missing or invalid.
-- `403 Forbidden`: Not the instructor of the course or an admin.
-- `404 Not Found`: Course not found.
-
-Example Request Body:
+- **Endpoint:** `PUT /api/user/profile`
+- **Description:** يسمح للمستخدم بتحديث بيانات ملفه الشخصي (الاسم، السيرة الذاتية، الصورة الشخصية). نحتاجه في الفرونت اند بداخل صفحة (إعدادات الحساب) ليتمكن المستخدم من حفظ تعديلاته.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Request Body:**
 ```json
-{
-  "title": "Introduction to Next.js",
-  "sequence_order": 1
-}
+// Check Schema
 ```
-
-Example Response:
-```json
-{
-  "status": "success",
-  "message": "Section created successfully",
-  "data": {
-    "id": "sec-uuid",
-    "course_id": "course-uuid",
-    "title": "Introduction to Next.js",
-    "sequence_order": 1,
-    "created_at": "2026-07-19T10:00:00Z",
-    "updated_at": "2026-07-19T10:00:00Z"
-  }
-}
-```
+- **Response:**
+  - **200**: Profile updated successfully
 
 ---
 
-## Update Section API
+## Verify a certificate (Public)
 
-Method:
-PUT
+- **Endpoint:** `GET /api/student-dashboard/certificates/verify/{credentialId}`
+- **Description:** للتحقق من صحة شهادة الطالب باستخدام رمز الاعتماد (Credential ID).
 
-URL:
-`/api/courses/:courseId/sections/:sectionId`
-
-Authentication:
-- Instructor (Must be the course owner)
-- Admin
-
-Description:
-Updates a section's title and/or sequence order. Automatically shifts other sections to accommodate the new sequence order without creating duplicates or gaps.
-
-Request Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| courseId | string (UUID) | Yes | The unique ID of the course |
-| sectionId | string (UUID) | Yes | The unique ID of the section |
-
-Query Parameters:
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-
-Request Body:
-```json
-{
-  "title": "Advanced Next.js Architecture",
-  "sequence_order": 2
-}
-```
-
-Example Response:
-```json
-{
-  "status": "success",
-  "message": "Section updated successfully",
-  "data": {
-    "id": "sec-uuid",
-    "course_id": "course-uuid",
-    "title": "Advanced Next.js Architecture",
-    "sequence_order": 2
-  }
-}
-```
+**English Details:** مسار عام (Public Endpoint) لا يتطلب تسجيل دخول. وظيفته هي التحقق من صحة أي شهادة مصدرة من المنصة باستخدام رقم الاعتماد (Credential ID). يمكن استخدامه من قبل أصحاب العمل أو أي جهة للتأكد من أن الشهادة صحيحة ومسجلة في النظام.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Path Parameters:**
+  - `credentialId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Certificate is valid
 
 ---
 
-# Remaining Endpoints (To Be Implemented)
+## Get dashboard overview metrics
 
-## Phase 5: Sections & Lessons
-Endpoints for managing individual lessons within a section.
+- **Endpoint:** `GET /api/student-dashboard/overview`
+- **Description:** يجلب ملخص أداء الطالب (Overview) لإحصائيات الإنجاز السريعة.
 
-### 1. Create a Lesson
-- **Endpoint**: `POST /api/courses/:courseId/sections/:sectionId/lessons`
-- **Authentication**: Required (Instructor or Admin)
-- **Description**: Creates a new lesson inside the specified section. Automatically places the lesson at the end of the sequence unless `sequence_order` is specified, in which case it cleanly inserts the lesson and shifts subsequent lessons down.
-- **Request Body**:
-  ```json
-  {
-    "title": "Introduction to React", // Required. Min 3 chars.
-    "duration": 120,                  // Required. Duration in minutes/seconds.
-    "video_url": "https://...",       // Optional.
-    "is_free_preview": false,         // Optional. Defaults to false.
-    "sequence_order": 1               // Optional.
-  }
-  ```
-- **Responses**:
-  - `201 Created`: Lesson successfully created.
-  - `400 Bad Request`: Validation failure or duplicate title.
-  - `403 Forbidden`: User is not the course instructor or an Admin.
-  - `404 Not Found`: Course or section not found.
+**English Details:** يجلب ملخص أداء الطالب (Overview) ليتم عرضه في أعلى لوحة التحكم (Dashboard). يعيد إحصائيات سريعة مثل عدد الكورسات المكتملة، الكورسات قيد الدراسة، وإجمالي الشهادات التي حصل عليها الطالب. مفيد لواجهة المستخدم لتوفير نظرة سريعة على الإنجازات.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Overview metrics retrieved
 
-### 2. Update a Lesson
-- **Endpoint**: `PATCH /api/courses/:courseId/sections/:sectionId/lessons/:lessonId`
-- **Authentication**: Required (Instructor or Admin)
-- **Description**: Updates a lesson's metadata or reorders it within the section using an atomic sequence shifting algorithm with pessimistic locking.
-- **Request Body** (all fields optional):
-  ```json
-  {
-    "title": "Advanced React",
-    "duration": 150,
-    "video_url": "https://...",
-    "is_free_preview": true,
-    "sequence_order": 2
-  }
-  ```
-- **Responses**:
-  - `200 OK`: Lesson updated successfully.
-  - `400 Bad Request`: Validation failure or duplicate title.
-  - `403 Forbidden`: User is not the course instructor or an Admin.
-  - `404 Not Found`: Course, Section, or Lesson not found.
+---
 
-### 3. Delete a Lesson
-- **Endpoint**: `DELETE /api/courses/:courseId/sections/:sectionId/lessons/:lessonId`
-- **Authentication**: Required (Instructor or Admin)
-- **Description**: Safely removes a lesson and automatically shifts sequence orders down to close gaps. Uses `SELECT ... FOR UPDATE` locking to guarantee integrity and prevent race conditions.
-- **Responses**:
-  - `200 OK`: Lesson deleted successfully.
-  - `400 Bad Request`: Validation failure.
-  - `403 Forbidden`: User is not the course instructor or an Admin.
-  - `404 Not Found`: Course, Section, or Lesson not found.
+## Get enrolled courses
 
-- **Delete Section**: `DELETE /api/courses/:courseId/sections/:sectionId`
-- **Create Lesson**: `POST /api/sections/:sectionId/lessons`
-- **Update Lesson**: `PUT /api/lessons/:lessonId`
-- **Delete Lesson**: `DELETE /api/lessons/:lessonId`
-- **Lesson Ordering**: `PUT /api/courses/:courseId/lessons/reorder`
-- **Video Upload**: `POST /api/upload/video`
+- **Endpoint:** `GET /api/student-dashboard/courses`
+- **Description:** يجلب جميع الكورسات التي سجل فيها الطالب (My Courses).
 
-## Phase 6: Enrollment System
+**English Details:** يجلب جميع الكورسات التي سجل فيها الطالب (My Courses) مع تفاصيل التقدم (Progress Percentage) الخاص بكل كورس. يستخدم في الفرونت اند لعرض مكتبة الكورسات الخاصة بالطالب.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Enrolled courses retrieved
 
-### 1. Enroll in Course
-- **Endpoint**: `POST /api/courses/:courseId/enroll`
-- **Authentication**: Required (Student)
-- **Description**: Enrolls a student in a course. If the course is free (`price == 0`), enrollment succeeds. If the course is paid (`price > 0`), it returns a `403 Forbidden` error instructing the student to purchase the course first. Validates that the course exists and is `PUBLISHED`. Automatically initializes `CourseProgress` for the student.
-- **Responses**:
-  - `201 Created`: Successfully enrolled.
-  - `400 Bad Request`: Validation failure (UUID format) or Student is already enrolled in this course.
-  - `401 Unauthorized`: Token missing or invalid.
-  - `403 Forbidden`: Paid courses require purchase before enrollment.
+---
 
-## Phase 7: Progress Tracking
-- **Track Lesson Completion**: `POST /api/progress/lessons/:lessonId`
-- **Student Course Progress**: `GET /api/progress/courses/:courseId`
-- **Continue Watching**: `GET /api/progress/courses/:courseId/continue`
+## Get recently watched courses
 
-## Phase 8: Favorites System
+- **Endpoint:** `GET /api/student-dashboard/continue-watching`
+- **Description:** يجلب أحدث الكورسات التي يتفاعل معها الطالب حالياً لاستكمالها (Continue Watching).
 
-### 1. Add Course to Favorites
-- **URL**: `/api/favorites/:courseId`
-- **Method**: `POST`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Adds a course to the student's favorites (wishlist). Operation is Idempotent.
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "message": "Course added to favorites successfully"
-  }
-  ```
-- **Error Responses**:
-  - `401 Unauthorized`
-  - `403 Forbidden`
-  - `404 Not Found` (If course does not exist or is not PUBLISHED)
+**English Details:** يجلب أحدث الكورسات التي يتفاعل معها الطالب حالياً مع تحديد آخر درس شاهده للعودة إليه مباشرة (Resume). يستخدم لعرض عنصر تحكم مباشر (Continue Watching) في لوحة التحكم لتسهيل الاستكمال.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Continue watching data retrieved
 
-### 2. Remove Course from Favorites
-- **URL**: `/api/favorites/:courseId`
-- **Method**: `DELETE`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Removes a course from favorites. Operation is Idempotent.
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "message": "Course removed from favorites successfully"
-  }
-  ```
-- **Error Responses**:
-  - `401 Unauthorized`
-  - `403 Forbidden`
+---
 
-### 3. Get Student Favorites
-- **URL**: `/api/favorites`
-- **Method**: `GET`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Retrieves all favorite courses for the student, ordered by most recently added.
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "data": {
-      "total": 1,
-      "favorites": [
-        {
-          "id": "uuid",
-          "course_id": "uuid",
-          "created_at": "2024-01-01T00:00:00.000Z",
-          "is_available": true,
-          "course": {
-            "id": "uuid",
-            "title": "Course Title",
-            "description": "...",
-            "price": 100,
-            "status": "PUBLISHED"
-          }
-        }
-      ]
-    }
-  }
-  ```
+## Get earned certificates
 
-### 4. Check Favorite Status
-- **URL**: `/api/favorites/:courseId/status`
-- **Method**: `GET`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Checks if a specific course is in the student's favorites.
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "data": {
-      "is_favorite": true
-    }
-  }
-  ```
+- **Endpoint:** `GET /api/student-dashboard/certificates`
+- **Description:** يجلب قائمة بجميع الشهادات التي حصل عليها الطالب (شهاداتي).
 
+**English Details:** يجلب قائمة بجميع الشهادات التي حصل عليها الطالب. يُستخدم في لوحة تحكم الطالب بداخل قسم (شهاداتي) لتنزيلها أو مشاركتها.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Certificates retrieved
 
-## Phase 9: Shopping Cart System
+---
 
-### 1. Add Course To Cart
-- **URL**: `/api/cart/items`
-- **Method**: `POST`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Adds a course to the student's shopping cart. Creates the cart if it doesn't exist.
-- **Request Body**:
-  ```json
-  {
-    "courseId": "uuid"
-  }
-  ```
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "message": "Course added to cart successfully"
-  }
-  ```
-- **Error Responses**:
-  - `400 Bad Request`: Already enrolled in the course.
-  - `401 Unauthorized`: Token missing or invalid.
-  - `403 Forbidden`: Not a student.
-  - `404 Not Found`: Course not found or not published.
-  - `409 Conflict`: Course is already in the cart.
+## Claim a new certificate
 
-### 2. Remove Course From Cart
-- **URL**: `/api/cart/items/:courseId`
-- **Method**: `DELETE`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Removes a specific course from the student's cart.
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "message": "Course removed from cart successfully"
-  }
-  ```
-- **Error Responses**:
-  - `404 Not Found`: Item not found in cart.
+- **Endpoint:** `POST /api/student-dashboard/certificates/{courseId}`
+- **Description:** يقوم بإنشاء شهادة جديدة للطالب بعد إتمامه الكورس بنسبة 100%.
 
-### 3. Get Student Cart
-- **URL**: `/api/cart`
-- **Method**: `GET`
-- **Auth**: Required (`STUDENT`)
-- **Description**: Retrieves the student's current cart items, total price, and total courses count.
-- **Success Response**: `200 OK`
-  ```json
-  {
-    "status": "success",
-    "data": {
-      "total_price": 80,
-      "total_courses_count": 1,
-      "items": [
-        {
-          "id": "uuid",
-          "title": "Course Title",
-          "thumbnail": "url",
-          "price": 100,
-          "discount_price": 80
-        }
-      ]
-    }
-  }
-  ```
+**English Details:** يقوم بإنشاء شهادة جديدة للطالب لكورس محدد، ولكن فقط إذا كان نسبة تقدمه في الكورس 100%. يستخدم عند ضغط الطالب على زر (استخراج الشهادة) بعد إنهاء الكورس.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **201**: Certificate claimed successfully
 
-## Phase 10: Orders & Payments
-- **Create Order**: `POST /api/orders`
-- **Payment Integration**: `POST /api/payments/checkout`
-- **Payment Verification**: `POST /api/payments/verify`
-- **Order History**: `GET /api/orders`
+---
 
-## Phase 10: Orders & Payments
+## Create a new section
 
-### Create Order
-**Method:** POST
-**URL:** `/api/orders`
-**Authentication:** Student
-**Description:** Creates an order from the user's cart. Calculates active prices, saves them in order items, sets order and payment status to PENDING. Returns the newly created order.
+- **Endpoint:** `POST /api/courses/{courseId}/sections`
+- **Description:** بناء قسم جديد للكورس (مثل: الفصل الأول).
 
-### Verify Payment
-**Method:** POST
-**URL:** `/api/payments/verify`
-**Authentication:** Student
-**Description:** Mocks the payment verification process. If success is true, marks payment SUCCESS, order PAID, clears cart, and automatically creates course enrollments.
-**Body:**
+**English Details:** Create a new section
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `courseId` (string): Course UUID
+- **Request Body:**
 ```json
 {
-  "orderId": "uuid",
-  "success": true
+  "title": "string",
+  "sequence_order": "integer"
 }
 ```
+- **Response:**
+  - **201**: Section created successfully
+  - **400**: Validation error or Duplicate title
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not instructor or admin)
+  - **404**: Course not found
+  - **500**: Server error
 
-### Get Order History
-**Method:** GET
-**URL:** `/api/orders/history`
-**Authentication:** Student
-**Description:** Retrieves all orders belonging to the authenticated student, including items and payment details.
+---
 
-## Phase 11: Instructor Dashboard
+## Update a section
 
-**All endpoints require authentication and INSTRUCTOR role.**
+- **Endpoint:** `PUT /api/courses/{courseId}/sections/{sectionId}`
+- **Description:** تغيير مسمى القسم (تعديل).
 
-### Instructor Profile
-**Method:** GET
-**URL:** `/api/instructor/profile`
-**Description:** Retrieves the basic profile information of the authenticated instructor.
+**English Details:** Update a section
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `courseId` (string): Course UUID
+  - `sectionId` (string): Section UUID
+- **Request Body:**
+```json
+{
+  "title": "string",
+  "sequence_order": "integer"
+}
+```
+- **Response:**
+  - **200**: Section updated successfully
+  - **400**: Validation error or Duplicate title
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not instructor or admin)
+  - **404**: Course or Section not found
+  - **500**: Server error
 
-### Dashboard Overview
-**Method:** GET
-**URL:** `/api/instructor/dashboard`
-**Description:** Retrieves top-level aggregate statistics including total courses, published courses, draft courses, total students, total revenue, average rating, total reviews, and the 5 most recent enrollments.
+---
 
-### Instructor Courses
-**Method:** GET
-**URL:** `/api/instructor/courses`
-**Query Parameters:** `page`, `limit`, `search`, `sort`, `order`
-**Description:** Retrieves a paginated list of courses taught by the instructor with enrollment count, average rating, and revenue per course.
+## Delete a section
 
-### Course Statistics
-**Method:** GET
-**URL:** `/api/instructor/courses/:courseId/stats`
-**Description:** Retrieves detailed statistics for a specific course owned by the instructor. Returns 404 if the course is not found or not owned by the instructor.
+- **Endpoint:** `DELETE /api/courses/{courseId}/sections/{sectionId}`
+- **Description:** حذف القسم بالكامل (مدربين).
 
-### Revenue Statistics
-**Method:** GET
-**URL:** `/api/instructor/revenue`
-**Query Parameters:** `period` (month, year, all - default is all)
-**Description:** Calculates total revenue generated across all courses from completed orders, filtered by the given period.
+**English Details:** Delete a section
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): Course UUID
+  - `sectionId` (string): Section UUID
+- **Request Body:** None
+- **Response:**
+  - **200**: Section deleted successfully
+  - **400**: Validation error
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not instructor or admin)
+  - **404**: Course or Section not found
+  - **500**: Server error
 
-### Student Analytics
-**Method:** GET
-**URL:** `/api/instructor/students`
-**Query Parameters:** `page`, `limit`, `search`, `sort`, `order`
-**Description:** Retrieves a paginated list of unique students enrolled in the instructor's courses, along with total purchased courses, completed courses, average progress, and last active date.
+---
 
-### Latest Enrollments
-**Method:** GET
-**URL:** `/api/instructor/enrollments/latest`
-**Query Parameters:** `page`, `limit`
-**Description:** Retrieves the most recent enrollments across all courses owned by the instructor.
+## Add a review to a course
 
-### Reviews Overview
-**Method:** GET
-**URL:** `/api/instructor/reviews`
-**Query Parameters:** `page`, `limit`, `search`, `sort`, `order`
-**Description:** Retrieves recent reviews left on the instructor's courses.
+- **Endpoint:** `POST /api/courses/{id}/reviews`
+- **Description:** السماح للطالب فقط بتقييم الكورس من 1 إلى 5 نجوم.
 
-## Phase 12: Admin Dashboard
-- **Manage Users**: `GET /api/admin/users`, `PUT /api/admin/users/:id`
-- **Manage Courses**: `GET /api/admin/courses`, `PUT /api/admin/courses/:id/status`
-- **Manage Reviews**: `GET /api/admin/reviews`, `DELETE /api/admin/reviews/:id`
-- **Reports & Analytics**: `GET /api/admin/reports`
+**English Details:** Add a review to a course
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Request Body:**
+```json
+{
+  "rating": "integer",
+  "comment": "string"
+}
+```
+- **Response:**
+  - **201**: Review created successfully
+  - **400**: Validation error
+  - **401**: Unauthorized (Token missing/invalid)
+  - **403**: Forbidden (Not a student, not enrolled, or already reviewed)
+  - **404**: Course not found
 
-## Phase 13: Notifications
-- **Create Notification**: `POST /api/notifications`
-- **Read Notifications**: `GET /api/notifications`, `PUT /api/notifications/:id/read`
+---
 
-## Phase 14: Final Production Preparation
-- Security Review
-- Performance Optimization
-- Error Handling Review
-- Swagger Final Review
-- Environment Configuration
-- Deployment Preparation
-- Database Backup Strategy
-- Production Testing
+## Get all reviews for a course
+
+- **Endpoint:** `GET /api/courses/{id}/reviews`
+- **Description:** Get all reviews for a course
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Query Parameters:**
+  - `page` (integer): Page number
+  - `limit` (integer): Number of reviews per page
+- **Request Body:** None
+- **Response:**
+  - **200**: Reviews retrieved successfully
+  - **400**: Validation error
+  - **404**: Course not found
+
+---
+
+## Update an existing review
+
+- **Endpoint:** `PUT /api/courses/{id}/reviews/{reviewId}`
+- **Description:** Update an existing review
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): Course UUID
+  - `reviewId` (string): Review UUID
+- **Request Body:**
+```json
+{
+  "rating": "integer",
+  "comment": "string"
+}
+```
+- **Response:**
+  - **200**: Review updated successfully
+  - **400**: Validation error
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not the owner of the review)
+  - **404**: Review not found
+
+---
+
+## Delete a review
+
+- **Endpoint:** `DELETE /api/courses/{id}/reviews/{reviewId}`
+- **Description:** Delete a review
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): Course UUID
+  - `reviewId` (string): Review UUID
+- **Request Body:** None
+- **Response:**
+  - **200**: Review deleted successfully
+  - **400**: Validation error
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not the owner of the review)
+  - **404**: Review not found
+  - **500**: Server error
+
+---
+
+## Get unread notification count
+
+- **Endpoint:** `GET /api/notifications/unread-count`
+- **Description:** يقوم هذا الـ API بإرجاع عدد الإشعارات غير المقروءة فقط. تم إنشاؤه لعمل استعلام خفيف (Light polling) لتحديث أيقونة الجرس (Badge) في الفرونت اند بدون الحاجة لتحميل لستة الإشعارات كاملة، مما يوفر استهلاك البيانات ويحسن الأداء.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Unread count retrieved
+
+---
+
+## Mark all notifications as read
+
+- **Endpoint:** `PATCH /api/notifications/read-all`
+- **Description:** يقوم بتغيير حالة كل الإشعارات غير المقروءة لتصبح مقروءة بضغطة زر واحدة. نحتاجه في الفرونت اند لزر (Mark all as read) لتنظيف القائمة ويرجع الـ unread_count كـ 0.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: All marked as read successfully
+
+---
+
+## Get paginated notifications
+
+- **Endpoint:** `GET /api/notifications`
+- **Description:** يجلب تاريخ الإشعارات الخاصة بالمستخدم بنظام الـ Pagination. كما يسمح بالفلترة عبر النوع (type) أو الأهمية (priority) أو حالة القراءة. تم إنشاؤه ليعرض الإشعارات في صفحة الإشعارات الكاملة أو قائمة الـ Dropdown في الفرونت اند، مع استبعاد الإشعارات منتهية الصلاحية.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (integer): Page number
+  - `limit` (integer): Number of items per page
+  - `type` (string): Filter by NotificationType (e.g., SYSTEM, COURSE)
+  - `is_read` (boolean): Filter by read status
+  - `priority` (string): Filter by priority (LOW, MEDIUM, HIGH)
+- **Request Body:** None
+- **Response:**
+  - **200**: Notifications list retrieved
+
+---
+
+## Delete all notifications
+
+- **Endpoint:** `DELETE /api/notifications`
+- **Description:** يمسح كل إشعارات المستخدم بشكل نهائي. مخصص لزر (Clear All) في الفرونت اند لتفريغ صندوق الإشعارات بالكامل.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: All notifications deleted
+
+---
+
+## Get notification details
+
+- **Endpoint:** `GET /api/notifications/{id}`
+- **Description:** يجلب تفاصيل إشعار محدد. تم تحسين هذا الـ API بحيث لو كان الإشعار غير مقروء وقام المستخدم بفتحه، سيقوم هذا الـ API تلقائياً بتحديث حالته إلى مقروء ويرجع الـ unread_count الجديد، مما يوفر على الفرونت اند إرسال طلب (Request) إضافي لتحديث الحالة.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Notification details
+  - **404**: Notification not found or expired
+
+---
+
+## Delete a single notification
+
+- **Endpoint:** `DELETE /api/notifications/{id}`
+- **Description:** يمسح إشعار واحد فقط نهائياً من قاعدة البيانات.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Notification deleted
+
+---
+
+## Mark a single notification as read
+
+- **Endpoint:** `PATCH /api/notifications/{id}/read`
+- **Description:** يحول حالة إشعار واحد فقط ليكون مقروء مع إرجاع العدد المتبقي للإشعارات غير المقروءة. يمكن استخدامه لو كان هناك زر صغير (علامة مقروء) بجانب الإشعار ليتم النقر عليه بدون الدخول لصفحة التفاصيل.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Marked as read
+
+---
+
+## Create a new lesson
+
+- **Endpoint:** `POST /api/courses/{courseId}/sections/{sectionId}/lessons`
+- **Description:** إضافة درس جديد وتحديد ترتيبه (Sequence).
+
+**English Details:** Create a new lesson
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `courseId` (string): Course UUID
+  - `sectionId` (string): Section UUID
+- **Request Body:**
+```json
+{
+  "title": "string",
+  "duration": "integer",
+  "video_url": "string",
+  "is_free_preview": "boolean",
+  "sequence_order": "integer"
+}
+```
+- **Response:**
+  - **201**: Lesson created successfully
+  - **400**: Validation error or duplicate title
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not instructor or admin)
+  - **404**: Course or section not found
+  - **500**: Server error
+
+---
+
+## Update a lesson
+
+- **Endpoint:** `PATCH /api/courses/{courseId}/sections/{sectionId}/lessons/{lessonId}`
+- **Description:** تعديل تفاصيل أو فيديو الدرس.
+
+**English Details:** Update a lesson
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `courseId` (string): 
+  - `sectionId` (string): 
+  - `lessonId` (string): 
+- **Request Body:**
+```json
+{
+  "title": "string",
+  "duration": "integer",
+  "video_url": "string",
+  "is_free_preview": "boolean",
+  "sequence_order": "integer"
+}
+```
+- **Response:**
+  - **200**: Lesson updated successfully
+  - **400**: Validation error or duplicate title
+  - **401**: Unauthorized
+  - **403**: Forbidden
+  - **404**: Course, Section, or Lesson not found
+  - **500**: Server error
+
+---
+
+## Delete a lesson
+
+- **Endpoint:** `DELETE /api/courses/{courseId}/sections/{sectionId}/lessons/{lessonId}`
+- **Description:** حذف الدرس بشكل نهائي.
+
+**English Details:** Delete a lesson
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): 
+  - `sectionId` (string): 
+  - `lessonId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Lesson deleted successfully
+  - **400**: Validation error
+  - **401**: Unauthorized
+  - **403**: Forbidden
+  - **404**: Course, Section, or Lesson not found
+  - **500**: Server error
+
+---
+
+## Get instructor profile
+
+- **Endpoint:** `GET /api/instructor/profile`
+- **Description:** Get instructor profile
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Profile data
+
+---
+
+## Get instructor dashboard overview
+
+- **Endpoint:** `GET /api/instructor/dashboard`
+- **Description:** Get instructor dashboard overview
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Dashboard stats
+
+---
+
+## Get courses taught by the instructor
+
+- **Endpoint:** `GET /api/instructor/courses`
+- **Description:** Get courses taught by the instructor
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (integer): 
+  - `limit` (integer): 
+  - `search` (string): 
+  - `sort` (string): 
+  - `order` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Paginated courses
+
+---
+
+## Get specific course statistics
+
+- **Endpoint:** `GET /api/instructor/courses/{courseId}/stats`
+- **Description:** Get specific course statistics
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Course statistics
+
+---
+
+## Get revenue statistics
+
+- **Endpoint:** `GET /api/instructor/revenue`
+- **Description:** Get revenue statistics
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `period` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Revenue statistics
+
+---
+
+## Get students enrolled in instructor's courses
+
+- **Endpoint:** `GET /api/instructor/students`
+- **Description:** Get students enrolled in instructor's courses
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (string): 
+  - `limit` (string): 
+  - `search` (string): 
+  - `sort` (string): 
+  - `order` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Paginated students
+
+---
+
+## Get latest enrollments
+
+- **Endpoint:** `GET /api/instructor/enrollments/latest`
+- **Description:** Get latest enrollments
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (string): 
+  - `limit` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Latest enrollments
+
+---
+
+## Get reviews for instructor's courses
+
+- **Endpoint:** `GET /api/instructor/reviews`
+- **Description:** Get reviews for instructor's courses
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (string): 
+  - `limit` (string): 
+  - `search` (string): 
+  - `sort` (string): 
+  - `order` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Paginated reviews
+
+---
+
+## Get all home page data (Aggregated)
+
+- **Endpoint:** `GET /api/home`
+- **Description:** هذا الـ API مخصص لجلب كافة بيانات الصفحة الرئيسية في طلب واحد لتقليل عدد الطلبات (Requests).
+
+**English Details:** هذا الـ API مخصص لجلب كافة بيانات الصفحة الرئيسية (Hero, Categories, Featured Courses, Top Instructors, Statistics, Testimonials) في طلب واحد (Single Request). تم إنشاؤه لتقليل عدد الـ Requests من الفرونت اند وتحسين سرعة تحميل الصفحة الرئيسية (Fast Initial Load).
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Home data retrieved successfully
+
+---
+
+## Get Hero section data
+
+- **Endpoint:** `GET /api/home/hero`
+- **Description:** يجلب بيانات القسم الأول في الصفحة الرئيسية (Hero Section) والذي يتضمن العنوان الرئيسي، الوصف، والروابط السريعة. مخصص للفرونت اند في حال الرغبة بتحميل هذا الجزء بشكل منفصل.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Hero data retrieved
+
+---
+
+## Get top categories
+
+- **Endpoint:** `GET /api/home/categories`
+- **Description:** يجلب قائمة بأهم التصنيفات (Categories) مع عدد الكورسات المتاحة في كل تصنيف. يستخدم في الصفحة الرئيسية لعرض الأقسام الشائعة للطلاب للبحث والتصفح السريع.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Categories retrieved
+
+---
+
+## Get featured courses
+
+- **Endpoint:** `GET /api/home/featured-courses`
+- **Description:** يجلب قائمة بأفضل أو أحدث الكورسات المميزة. يستخدم في الفرونت اند لعرض شريط تمرير (Carousel) يلفت انتباه الطالب للكورسات الأعلى تقييماً أو الأكثر مبيعاً.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Featured courses retrieved
+
+---
+
+## Get top instructors
+
+- **Endpoint:** `GET /api/home/top-instructors`
+- **Description:** يجلب بيانات أفضل المدربين في المنصة بناءً على التقييمات وعدد الطلاب. مفيد في الصفحة الرئيسية لزيادة الثقة (Social Proof) وتشجيع الطلاب على التسجيل.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Top instructors retrieved
+
+---
+
+## Get platform statistics
+
+- **Endpoint:** `GET /api/home/statistics`
+- **Description:** يجلب إحصائيات عامة عن المنصة مثل (إجمالي الكورسات، عدد الطلاب النشطين، إجمالي المدربين). تُستخدم في الفرونت اند في قسم الأرقام لتعزيز مصداقية المنصة أمام الزوار.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Statistics retrieved
+
+---
+
+## Get student testimonials
+
+- **Endpoint:** `GET /api/home/testimonials`
+- **Description:** يجلب آراء وتقييمات الطلاب السابقين. يستخدم في الفرونت اند لزيادة الثقة والمبيعات (Testimonials Section).
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Testimonials retrieved
+
+---
+
+## Get FAQs
+
+- **Endpoint:** `GET /api/home/faq`
+- **Description:** يجلب الأسئلة الشائعة وإجاباتها. يستخدم في صفحة الأسئلة الشائعة أو في نهاية الصفحة الرئيسية للرد على استفسارات الزوار المعتادة.
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: FAQs retrieved
+
+---
+
+## Get footer links
+
+- **Endpoint:** `GET /api/home/footer`
+- **Description:** يجلب الروابط السريعة، معلومات التواصل، وروابط السوشيال ميديا الخاصة بأسفل الصفحة (Footer).
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: Footer data retrieved
+
+---
+
+## Get all favorite courses for the student
+
+- **Endpoint:** `GET /api/favorites`
+- **Description:** Get all favorite courses for the student
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: List of favorite courses retrieved successfully
+  - **401**: Unauthorized
+  - **403**: Forbidden
+
+---
+
+## Add a course to favorites
+
+- **Endpoint:** `POST /api/favorites/{courseId}`
+- **Description:** إضافة الكورس للحفظ لشرائه لاحقاً.
+
+**English Details:** Add a course to favorites
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Course added to favorites successfully
+  - **401**: Unauthorized
+  - **404**: Course not found or not published
+
+---
+
+## Remove a course from favorites
+
+- **Endpoint:** `DELETE /api/favorites/{courseId}`
+- **Description:** إلغاء الكورس من المفضلة.
+
+**English Details:** Remove a course from favorites
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Course removed from favorites successfully
+  - **401**: Unauthorized
+
+---
+
+## Check if a course is in favorites
+
+- **Endpoint:** `GET /api/favorites/{courseId}/status`
+- **Description:** Check if a course is in favorites
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Favorite status retrieved successfully
+  - **401**: Unauthorized
+
+---
+
+## Create a new course
+
+- **Endpoint:** `POST /api/courses`
+- **Description:** بدء إضافة كورس جديد (مسودة) للمدرب.
+
+**English Details:** Create a new course
+- **Token Required:** No
+- **Headers:**
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "title": "string",
+  "description": "string",
+  "instructor_id": "string",
+  "category_id": "string",
+  "price": "number",
+  "discount_price": "number",
+  "level": "string",
+  "language": "string",
+  "status": "string"
+}
+```
+- **Response:**
+  - **201**: Course created successfully
+  - **400**: Validation error or Instructor/Category not found
+
+---
+
+## Get all courses with pagination, search, and filters
+
+- **Endpoint:** `GET /api/courses`
+- **Description:** Get all courses with pagination, search, and filters
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Query Parameters:**
+  - `page` (integer): Page number
+  - `limit` (integer): Number of items per page
+  - `search` (string): Search by title or description
+  - `category_id` (string): Filter by category UUID
+  - `instructor_id` (string): Filter by instructor UUID
+  - `level` (string): Filter by course level (e.g. Beginner)
+  - `language` (string): Filter by course language
+  - `min_price` (number): Filter by minimum price
+  - `max_price` (number): Filter by maximum price
+  - `status` (string): Filter by status
+  - `sort_by` (string): Sort field (enrollments sorts by popularity)
+  - `sort_order` (string): Sort order
+- **Request Body:** None
+- **Response:**
+  - **200**: List of courses retrieved successfully
+
+---
+
+## Update an existing course
+
+- **Endpoint:** `PUT /api/courses/{id}`
+- **Description:** Update an existing course
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Request Body:**
+```json
+{
+  "title": "string",
+  "description": "string",
+  "price": "number",
+  "discount_price": "number"
+}
+```
+- **Response:**
+  - **200**: Course updated successfully
+  - **400**: Invalid inputs or category not found
+  - **401**: Unauthorized (Token missing/invalid)
+  - **403**: Forbidden (Not Admin or owner Instructor)
+  - **404**: Course not found
+
+---
+
+## Delete a course
+
+- **Endpoint:** `DELETE /api/courses/{id}`
+- **Description:** مسح الكورس من قبل المدرب (طالما لم يمتلكه طلاب).
+
+**English Details:** Delete a course
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Request Body:** None
+- **Response:**
+  - **200**: Course deleted successfully
+  - **400**: Foreign key relation violation or bad request
+  - **401**: Unauthorized (Token missing/invalid)
+  - **403**: Forbidden (Not Admin or owner Instructor)
+  - **404**: Course not found
+
+---
+
+## Get detailed information of a course (Public)
+
+- **Endpoint:** `GET /api/courses/{id}`
+- **Description:** Get detailed information of a course (Public)
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Request Body:** None
+- **Response:**
+  - **200**: Course details retrieved successfully
+  - **400**: Invalid UUID format
+  - **404**: Course not found
+
+---
+
+## Get rating summary and distribution for a course (Public)
+
+- **Endpoint:** `GET /api/courses/{id}/rating-summary`
+- **Description:** Get rating summary and distribution for a course (Public)
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Request Body:** None
+- **Response:**
+  - **200**: Rating summary retrieved successfully
+  - **400**: Invalid UUID format
+  - **404**: Course not found
+  - **500**: Server error
+
+---
+
+## Get related courses for a given course (Public)
+
+- **Endpoint:** `GET /api/courses/{id}/related`
+- **Description:** Get related courses for a given course (Public)
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Path Parameters:**
+  - `id` (string): Course UUID
+- **Query Parameters:**
+  - `limit` (integer): Number of related courses to return
+- **Request Body:** None
+- **Response:**
+  - **200**: Related courses retrieved successfully
+  - **400**: Invalid UUID format
+  - **404**: Course not found
+  - **500**: Server error
+
+---
+
+## Get all categories
+
+- **Endpoint:** `GET /api/categories`
+- **Description:** Get all categories
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Request Body:** None
+- **Response:**
+  - **200**: List of categories
+
+---
+
+## Create a new category
+
+- **Endpoint:** `POST /api/categories`
+- **Description:** إضافة تصنيف جديد بواسطة الإدارة.
+
+**English Details:** Create a new category
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "name": "string",
+  "icon": "string"
+}
+```
+- **Response:**
+  - **201**: Category created
+
+---
+
+## Get category by ID
+
+- **Endpoint:** `GET /api/categories/{id}`
+- **Description:** عرض تفاصيل التصنيف والمقررات التابعة له.
+
+**English Details:** Get category by ID
+- **Token Required:** No
+- **Headers:**
+  - None
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Category details
+  - **404**: Category not found
+
+---
+
+## Update an existing category
+
+- **Endpoint:** `PUT /api/categories/{id}`
+- **Description:** Update an existing category
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:**
+```json
+{
+  "name": "string",
+  "icon": "string"
+}
+```
+- **Response:**
+  - **200**: Category updated
+
+---
+
+## Delete a category
+
+- **Endpoint:** `DELETE /api/categories/{id}`
+- **Description:** حذف التصنيف كلياً.
+
+**English Details:** Delete a category
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **204**: Category deleted
+
+---
+
+## Add a course to the shopping cart
+
+- **Endpoint:** `POST /api/cart/items`
+- **Description:** Add a course to the shopping cart
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "courseId": "string"
+}
+```
+- **Response:**
+  - **200**: Course added to cart successfully
+  - **400**: Already enrolled
+  - **401**: Unauthorized
+  - **403**: Forbidden (Not a student)
+  - **404**: Course not found or not published
+  - **409**: Course is already in the cart
+
+---
+
+## Remove a course from the shopping cart
+
+- **Endpoint:** `DELETE /api/cart/items/{courseId}`
+- **Description:** Remove a course from the shopping cart
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `courseId` (string): The ID of the course to remove
+- **Request Body:** None
+- **Response:**
+  - **200**: Course removed from cart successfully
+  - **401**: Unauthorized
+  - **403**: Forbidden
+  - **404**: Item not found in cart
+
+---
+
+## Get student's shopping cart
+
+- **Endpoint:** `GET /api/cart`
+- **Description:** Get student's shopping cart
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Cart details retrieved successfully
+  - **401**: Unauthorized
+  - **403**: Forbidden
+
+---
+
+## Register a new student
+
+- **Endpoint:** `POST /api/auth/register`
+- **Description:** يتم استخدام هذا الـ API لإنشاء حساب جديد كطالب (Student). نحتاجه في الفرونت اند لصفحة التسجيل، وبمجرد نجاحه يرجع بيانات المستخدم مع التوكين (JWT) لتسجيل الدخول مباشرة بدون خطوة إضافية.
+- **Token Required:** No
+- **Headers:**
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "full_name": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+- **Response:**
+  - **201**: User registered successfully
+  - **400**: Bad request (e.g., email already exists)
+
+---
+
+## Login to an account
+
+- **Endpoint:** `POST /api/auth/login`
+- **Description:** تسجيل الدخول للمنصة. نحتاجه في الفرونت اند للتحقق من إيميل وباسورد المستخدم وإرجاع التوكين (JWT) الذي سيُستخدم في كل الطلبات القادمة (Requests) للـ API لإثبات هوية المستخدم.
+- **Token Required:** No
+- **Headers:**
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+- **Response:**
+  - **200**: Logged in successfully
+  - **401**: Invalid credentials
+  - **403**: Account suspended or deleted
+
+---
+
+## Logout (Client-side token drop)
+
+- **Endpoint:** `POST /api/auth/logout`
+- **Description:** تسجيل الخروج من النظام. حالياً يتم الاعتماد على تنفيذه في الفرونت اند عبر مسح التوكين من الـ Local Storage، لكن هذا الـ API متوفر كخطوة استباقية (Placeholder) لإمكانية التوسع مستقبلاً وإضافة التوكين للقائمة السوداء (Blacklist).
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Logged out successfully
+
+---
+
+## Get current authenticated user core identity
+
+- **Endpoint:** `GET /api/auth/me`
+- **Description:** يجلب الهوية الأساسية للمستخدم الحالي (مثل الـ ID والـ Role). نحتاجه جداً في الفرونت اند عند عمل Refresh للصفحة أو أول تحميل (Initial Load) للتأكد من أن التوكين لا يزال صالحاً، ولتوجيه المستخدم بناءً على صلاحياته (طالب، مدرب، آدمن).
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Returns user ID and Role
+
+---
+
+## Change own password
+
+- **Endpoint:** `PATCH /api/auth/change-password`
+- **Description:** يسمح للمستخدم بتغيير كلمة المرور الخاصة به. نحتاجه في الفرونت اند لصفحة (الإعدادات / الأمان)، ويتطلب معرفة كلمة المرور الحالية قبل التغيير كإجراء أمني.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "current_password": "string",
+  "new_password": "string"
+}
+```
+- **Response:**
+  - **200**: Password updated successfully
+  - **400**: Validation Error
+  - **403**: Forbidden (Incorrect current password or password reuse)
+
+---
+
+## Get Admin Dashboard Statistics
+
+- **Endpoint:** `GET /api/admin/dashboard`
+- **Description:** Get Admin Dashboard Statistics
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Request Body:** None
+- **Response:**
+  - **200**: Dashboard statistics retrieved successfully
+  - **401**: Unauthorized
+  - **403**: Forbidden (Admin only)
+
+---
+
+## Create User (Admin)
+
+- **Endpoint:** `POST /api/admin/users`
+- **Description:** Create User (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "full_name": "string",
+  "email": "string",
+  "password": "string",
+  "role": "string"
+}
+```
+- **Response:**
+  - **201**: User created successfully
+  - **403**: Forbidden (Cannot assign ADMIN role)
+  - **409**: Conflict (Email already exists)
+
+---
+
+## Get all users (Admin)
+
+- **Endpoint:** `GET /api/admin/users`
+- **Description:** قائمة بكل المستخدمين مع فلترة وتنقيب للآدمن.
+
+**English Details:** Get all users (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (integer): 
+  - `limit` (integer): 
+  - `search` (string): 
+  - `sort` (string): 
+  - `order` (string): 
+  - `role` (string): 
+  - `status` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Users retrieved successfully
+
+---
+
+## Update User Status (Admin)
+
+- **Endpoint:** `PATCH /api/admin/users/{id}/status`
+- **Description:** Update User Status (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:**
+```json
+{
+  "status": "string"
+}
+```
+- **Response:**
+  - **200**: Status updated successfully
+  - **403**: Forbidden
+  - **404**: Not Found
+  - **409**: Conflict
+
+---
+
+## Get User Details (Admin)
+
+- **Endpoint:** `GET /api/admin/users/{id}`
+- **Description:** عرض تفاصيل حساب المستخدم بشكل كامل للمشرف.
+
+**English Details:** Get User Details (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: User details retrieved successfully
+  - **404**: User not found
+
+---
+
+## Delete User (Admin)
+
+- **Endpoint:** `DELETE /api/admin/users/{id}`
+- **Description:** حذف حساب المستخدم بشكل كامل وصارم.
+
+**English Details:** Delete User (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: User account deactivated successfully
+  - **403**: Forbidden (Escalation or self-deletion)
+  - **404**: User not found
+
+---
+
+## Update User Role (Admin)
+
+- **Endpoint:** `PATCH /api/admin/users/{id}/role`
+- **Description:** ترقية أو تعديل صلاحيات المستخدمين (مثال: تحويل طالب لمدرب).
+
+**English Details:** Update User Role (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:**
+```json
+{
+  "role": "string"
+}
+```
+- **Response:**
+  - **200**: Role updated successfully
+  - **403**: Forbidden (Escalation or self-modification)
+  - **404**: User not found
+  - **409**: Role already applied
+
+---
+
+## Reset User Password (Admin)
+
+- **Endpoint:** `POST /api/admin/users/{id}/reset-password`
+- **Description:** إجبار إعادة تعيين كلمة المرور كإجراء أمنـي.
+
+**English Details:** Reset User Password (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Password reset successfully
+  - **403**: Forbidden (Escalation or self-reset)
+  - **404**: User not found
+
+---
+
+## Get User Role History (Admin)
+
+- **Endpoint:** `GET /api/admin/users/{id}/role-history`
+- **Description:** مراقبة متى ومن قام بتغيير صلاحيات المستخدم.
+
+**English Details:** Get User Role History (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: History retrieved successfully
+  - **404**: User not found
+
+---
+
+## Get all courses (Admin)
+
+- **Endpoint:** `GET /api/admin/courses`
+- **Description:** الإشراف والاطلاع على كل الكورسات في النظام.
+
+**English Details:** Get all courses (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (integer): 
+  - `limit` (integer): 
+  - `search` (string): 
+  - `sort` (string): 
+  - `order` (string): 
+  - `status` (string): 
+  - `category` (string): 
+  - `instructor` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Courses retrieved successfully
+
+---
+
+## Update Course Status (Admin)
+
+- **Endpoint:** `PATCH /api/admin/courses/{id}/status`
+- **Description:** نشر أو رفض الكورسات الجديدة للحفاظ على جودة المحتوى.
+
+**English Details:** Update Course Status (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:**
+```json
+{
+  "status": "string"
+}
+```
+- **Response:**
+  - **200**: Status updated successfully
+
+---
+
+## Get all reviews (Admin)
+
+- **Endpoint:** `GET /api/admin/reviews`
+- **Description:** الإشراف ومراقبة كل تقييمات المنصة.
+
+**English Details:** Get all reviews (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+- **Query Parameters:**
+  - `page` (integer): 
+  - `limit` (integer): 
+  - `search` (string): 
+  - `sort` (string): 
+  - `order` (string): 
+  - `rating` (integer): 
+  - `status` (string): 
+- **Request Body:** None
+- **Response:**
+  - **200**: Reviews retrieved successfully
+
+---
+
+## Update Review Status (Admin)
+
+- **Endpoint:** `PATCH /api/admin/reviews/{id}/status`
+- **Description:** إخفاء التقييمات المضللة أو المسيئة.
+
+**English Details:** Update Review Status (Admin)
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Path Parameters:**
+  - `id` (string): 
+- **Request Body:**
+```json
+{
+  "status": "string"
+}
+```
+- **Response:**
+  - **200**: Status updated successfully
+
+---
+
+## Broadcast a notification to all users
+
+- **Endpoint:** `POST /api/admin/notifications/broadcast`
+- **Description:** مخصص للآدمنز لإرسال إشعار عام (Broadcast) لكل المستخدمين النشطين في المنصة في وقت واحد (مثل إعلانات الصيانة والتحديثات). تم برمجته ليعمل بأعلى كفاءة ممكنة عبر قاعدة البيانات بدون التأثير على أداء السيرفر.
+- **Token Required:** Yes (Authorization Bearer Token)
+- **Headers:**
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "title": "string",
+  "message": "string",
+  "priority": "string",
+  "action_url": "string"
+}
+```
+- **Response:**
+  - **201**: Notification broadcasted
+
+---
+

@@ -138,12 +138,14 @@ export class ProgressTrackingService {
       await tx.lessonProgress.upsert({
         where: { enrollment_id_lesson_id: { enrollment_id: enrollment.id, lesson_id: lessonId } },
         update: {
-          watch_position: position,
+          watch_position_seconds: position,
+          last_watched_at: new Date(),
         },
         create: {
           enrollment_id: enrollment.id,
           lesson_id: lessonId,
-          watch_position: position,
+          watch_position_seconds: position,
+          last_watched_at: new Date(),
         },
       });
 

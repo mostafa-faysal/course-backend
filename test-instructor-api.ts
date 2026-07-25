@@ -164,7 +164,7 @@ async function runTests() {
   // --- TESTS ---
 
   console.log('1. Unauthorized access (No Token)');
-  let res = await fetch(`${API_URL}/instructor/dashboard`);
+  let res: any = await fetch(`${API_URL}/instructor/dashboard`);
   console.log('Expected: 401, Got:', res.status);
 
   console.log('\n2. Unauthorized access (Student Role)');

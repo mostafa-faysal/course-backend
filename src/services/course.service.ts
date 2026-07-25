@@ -1,5 +1,6 @@
 import { Course, Section, Lesson, Prisma } from '@prisma/client';
 import { prisma } from '../config/db';
+import { NotificationHelper } from '../helpers/notification.helper';
 
 export class CourseService {
   /**
@@ -39,12 +40,22 @@ export class CourseService {
       learning_outcomes: data.learning_outcomes || [],
     };
 
-    return prisma.course.create({
+    const course = await prisma.course.create({
       data: courseData,
       include: {
         category: true,
       },
     });
+
+    // Notify Admins
+    if (course.status === 'PENDING') {
+      const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+      if (admins.length > 0) {
+        await NotificationHelper.sendNewCourseSubmitted(admins.map(a => a.id), course.id, course.title);
+      }
+    }
+
+    return course;
   }
 
   /**

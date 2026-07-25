@@ -17,12 +17,15 @@ enum Role {
 enum UserStatus {
   ACTIVE
   SUSPENDED
+  DELETED
 }
 
 enum CourseStatus {
   DRAFT
   PUBLISHED
   HIDDEN
+  PENDING
+  REJECTED
 }
 
 enum OrderStatus {
@@ -42,6 +45,54 @@ enum PaymentStatus {
   FAILED
 }
 
+enum AssignmentStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+}
+
+enum AssignmentType {
+  HOMEWORK
+  PROJECT
+  QUIZ
+  EXAM
+}
+
+enum GradingType {
+  MANUAL
+  AUTO
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum NotificationType {
+  SYSTEM
+  COURSE
+  ENROLLMENT
+  ASSIGNMENT
+  REVIEW
+  CERTIFICATE
+  PASSWORD
+  ACCOUNT
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id              String         @id @default(uuid())
   full_name       String
@@ -56,6 +107,7 @@ model User {
   status          UserStatus     @default(ACTIVE)
   created_at      DateTime       @default(now())
   last_login      DateTime?
+  password_updated_at DateTime?
 
   // Relations
   courses_taught  Course[]       @relation("InstructorCourses")
@@ -65,8 +117,17 @@ model User {
   wishlist        Wishlist?
   cart            Cart?
   certificates    Certificate[]
+  learning_plan   LearningPlan?
+  assignment_submissions AssignmentSubmission[] @relation("StudentSubmissions")
+  graded_submissions     AssignmentSubmission[] @relation("GraderSubmissions")
+  grade_audits           AssignmentGradeHistory[]
+  role_histories         UserRoleHistory[]      @relation("UserRoleChanges")
+  role_changes_made      UserRoleHistory[]      @relation("RoleChangedBy")
+  action_histories       UserActionHistory[]    @relation("UserActions")
+  actions_performed      UserActionHistory[]    @relation("AdminActions")
   notifications   Notification[]
 }
+
 
 model Category {
   id         String   @id @default(uuid())
@@ -106,6 +167,8 @@ model Course {
   wishlist_items     WishlistItem[]
   cart_items         CartItem[]
   certificates       Certificate[]
+  learning_plan_items LearningPlanItem[]
+  assignments        Assignment[]
 }
 
 model Section {
@@ -117,6 +180,7 @@ model Section {
   // Relations
   course         Course   @relation(fields: [course_id], references: [id])
   lessons        Lesson[]
+  assignments    Assignment[]
 
   @@index([course_id, sequence_order])
 }
@@ -134,6 +198,7 @@ model Lesson {
   section         Section  @relation(fields: [section_id], references: [id])
   course_progress CourseProgress[]
   lesson_progress LessonProgress[]
+  assignments     Assignment[]
 
   @@index([section_id, sequence_order])
 }
@@ -143,6 +208,7 @@ model Enrollment {
   student_id          String
   course_id           String
   progress_percentage Float    @default(0.0)
+  status              EnrollmentStatus @default(ACTIVE)
   enrolled_at         DateTime @default(now())
   completed_at        DateTime?
 
@@ -153,6 +219,8 @@ model Enrollment {
   lesson_progress     LessonProgress[]
 
   @@unique([student_id, course_id])
+  @@index([student_id])
+  @@index([course_id])
 }
 
 model Order {
@@ -264,37 +332,13 @@ model Coupon {
   orders              Order[]
 }
 
-model Certificate {
-  id         String   @id @default(uuid())
-  student_id String
-  course_id  String
-  issue_date DateTime @default(now())
-  pdf_url    String
 
-  // Relations
-  student    User     @relation(fields: [student_id], references: [id])
-  course     Course   @relation(fields: [course_id], references: [id])
-
-  @@unique([student_id, course_id])
-}
-
-model Notification {
-  id         String   @id @default(uuid())
-  user_id    String
-  title      String
-  message    String
-  type       String?
-  is_read    Boolean  @default(false)
-  created_at DateTime @default(now())
-
-  // Relations
-  user       User     @relation(fields: [user_id], references: [id])
-}
 
 model CourseProgress {
   id                     String     @id @default(uuid())
   enrollment_id          String     @unique
   last_watched_lesson_id String?
+  last_watched_at        DateTime?
 
   // Relations
   enrollment             Enrollment @relation(fields: [enrollment_id], references: [id])
@@ -302,16 +346,237 @@ model CourseProgress {
 }
 
 model LessonProgress {
-  id            String     @id @default(uuid())
-  enrollment_id String
-  lesson_id     String
-  is_completed  Boolean    @default(false)
-  watch_position Int       @default(0)
-  completed_at  DateTime?
+  id                     String     @id @default(uuid())
+  enrollment_id          String
+  lesson_id              String
+  is_completed           Boolean    @default(false)
+  watch_position_seconds Int        @default(0)
+  completed_at           DateTime?
+  last_watched_at        DateTime?
+  created_at             DateTime   @default(now())
+  updated_at             DateTime   @updatedAt
 
   // Relations
-  enrollment    Enrollment @relation(fields: [enrollment_id], references: [id])
-  lesson        Lesson     @relation(fields: [lesson_id], references: [id])
+  enrollment             Enrollment @relation(fields: [enrollment_id], references: [id])
+  lesson                 Lesson     @relation(fields: [lesson_id], references: [id])
 
   @@unique([enrollment_id, lesson_id])
+  @@index([enrollment_id])
+  @@index([lesson_id])
+}
+
+model LearningPlan {
+  id         String             @id @default(uuid())
+  student_id String             @unique
+  created_at DateTime           @default(now())
+  updated_at DateTime           @updatedAt
+
+  // Relations
+  student    User               @relation(fields: [student_id], references: [id])
+  items      LearningPlanItem[]
+}
+
+model LearningPlanItem {
+  id               String       @id @default(uuid())
+  learning_plan_id String
+  course_id        String
+  sequence_order   Int
+  created_at       DateTime     @default(now())
+
+  // Relations
+  learning_plan    LearningPlan @relation(fields: [learning_plan_id], references: [id])
+  course           Course       @relation(fields: [course_id], references: [id]) // RESTRICT default
+
+  @@unique([learning_plan_id, course_id])
+  @@unique([learning_plan_id, sequence_order])
+  @@index([learning_plan_id, sequence_order])
+}
+
+// --------------------------------------------------
+// Phase 14: Assignments System
+// --------------------------------------------------
+
+model Assignment {
+  id                  String           @id @default(uuid())
+  course_id           String
+  section_id          String?
+  lesson_id           String?
+  title               String
+  description         String
+  type                AssignmentType   @default(HOMEWORK)
+  grading_type        GradingType      @default(MANUAL)
+  status              AssignmentStatus @default(DRAFT)
+  is_visible          Boolean          @default(true)
+  available_from      DateTime?
+  due_date            DateTime?
+  time_limit_minutes  Int?
+  total_marks         Float
+  passing_marks       Float
+  allow_resubmission  Boolean          @default(true)
+  max_attempts        Int              @default(1)
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+
+  // Relations
+  course              Course           @relation(fields: [course_id], references: [id])
+  section             Section?         @relation(fields: [section_id], references: [id])
+  lesson              Lesson?          @relation(fields: [lesson_id], references: [id])
+  
+  submissions         AssignmentSubmission[]
+  attachments         AssignmentAttachment[]
+
+  @@index([course_id])
+  @@index([section_id])
+  @@index([lesson_id])
+}
+
+model AssignmentAttachment {
+  id              String       @id @default(uuid())
+  assignment_id   String
+  url             String
+  file_name       String?
+  mime_type       String?
+  size            Int?
+  created_at      DateTime     @default(now())
+
+  assignment      Assignment   @relation(fields: [assignment_id], references: [id], onDelete: Cascade)
+}
+
+model AssignmentSubmission {
+  id              String           @id @default(uuid())
+  assignment_id   String
+  student_id      String
+  status          SubmissionStatus @default(DRAFT)
+  score           Float?
+  feedback        String?
+  attempt_number  Int              @default(1)
+  is_late         Boolean          @default(false)
+  submitted_at    DateTime?
+  graded_at       DateTime?
+  graded_by       String?
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+
+  // Relations
+  assignment      Assignment       @relation(fields: [assignment_id], references: [id])
+  student         User             @relation("StudentSubmissions", fields: [student_id], references: [id])
+  grader          User?            @relation("GraderSubmissions", fields: [graded_by], references: [id])
+  
+  attempts        AssignmentSubmissionAttempt[]
+  grade_audits    AssignmentGradeHistory[]
+
+  @@unique([assignment_id, student_id])
+}
+
+model AssignmentSubmissionAttempt {
+  id              String               @id @default(uuid())
+  submission_id   String
+  content         String?
+  attempt_number  Int
+  submitted_at    DateTime             @default(now())
+  is_late         Boolean              @default(false)
+
+  submission      AssignmentSubmission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+  attachments     SubmissionAttachment[]
+
+  @@index([submission_id])
+}
+
+model SubmissionAttachment {
+  id              String               @id @default(uuid())
+  attempt_id      String
+  url             String
+  file_name       String?
+  mime_type       String?
+  size            Int?
+  created_at      DateTime             @default(now())
+
+  attempt         AssignmentSubmissionAttempt @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+}
+
+model AssignmentGradeHistory {
+  id              String               @id @default(uuid())
+  submission_id   String
+  graded_by       String
+  old_score       Float?
+  new_score       Float
+  created_at      DateTime             @default(now())
+
+  submission      AssignmentSubmission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+  grader          User                 @relation(fields: [graded_by], references: [id])
+}
+
+model Certificate {
+  id              String   @id @default(uuid())
+  student_id      String
+  course_id       String
+  credential_id   String   @unique @default(cuid())
+  title           String
+  issued_at       DateTime @default(now())
+  certificate_url String?
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  student         User     @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  course          Course   @relation(fields: [course_id], references: [id], onDelete: Restrict)
+
+  @@unique([student_id, course_id])
+  @@index([student_id])
+  @@index([course_id])
+}
+
+model UserRoleHistory {
+  id          String   @id @default(uuid())
+  user_id     String
+  changed_by  String
+  old_role    Role
+  new_role    Role
+  created_at  DateTime @default(now())
+
+  user        User @relation("UserRoleChanges", fields: [user_id], references: [id], onDelete: Cascade)
+  admin       User @relation("RoleChangedBy", fields: [changed_by], references: [id], onDelete: Restrict)
+
+  @@index([user_id])
+  @@index([changed_by])
+}
+
+model UserActionHistory {
+  id           String   @id @default(uuid())
+  user_id      String
+  action       String
+  performed_by String
+  created_at   DateTime @default(now())
+
+  user         User @relation("UserActions", fields: [user_id], references: [id], onDelete: Cascade)
+  admin        User @relation("AdminActions", fields: [performed_by], references: [id], onDelete: Restrict)
+
+  @@index([user_id])
+  @@index([performed_by])
+}
+
+model Notification {
+  id          String               @id @default(uuid())
+  user_id     String
+  title       String
+  message     String
+  type        NotificationType     @default(SYSTEM)
+  priority    NotificationPriority @default(MEDIUM)
+  action_url  String?
+  target_type String?
+  target_id   String?
+  metadata    Json?
+  is_read     Boolean              @default(false)
+  read_at     DateTime?
+  expires_at  DateTime?
+  created_at  DateTime             @default(now())
+  updated_at  DateTime             @updatedAt
+
+  user        User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([created_at])
+  @@index([is_read])
+  @@index([type])
+  @@index([priority])
 }

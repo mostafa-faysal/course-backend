@@ -1,5 +1,15 @@
 node_modules
-# Keep environment variables out of version control
+dist
+build
+coverage
 .env
+.env.*
+.gemini
+*.log
+npm-debug.log*
+
+# Ignore any random javascript build outputs in ts source directory
+src/**/*.js
+src/**/*.js.map
 
 /src/generated/prisma

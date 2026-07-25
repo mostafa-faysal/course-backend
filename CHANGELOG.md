@@ -1,6 +1,45 @@
 # Changelog
 
-## [Phase 11] Instructor Dashboard
+## [Phase 18] Final Production Preparation & Security Hardening
+- **Security Headers (`helmet`)**: Hardened Helmet middleware config protecting against XSS, clickjacking (`frameguard: deny`), and MIME sniffing.
+- **CORS Configuration**: Restricted cross-origin resource sharing strictly to explicit domains (`CORS_ORIGIN` from `.env`).
+- **Environment Startup Validation**: Implemented strict Zod schema validation for required environment variables (`DATABASE_URL`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `CORS_ORIGIN`) refusing server boot upon missing configurations.
+- **Compression Middleware**: Attached global payload compression on all Express API outputs.
+- **Rate Limiting**: Integrated `express-rate-limit` with global IP quotas (100 requests per 15 min) and stricter brute-force shielding on authentication routes (10 attempts per 15 min).
+- **Prisma Exception Hardening**: Refactored `errorHandler` middleware to cleanly map Prisma known request errors (`P2002` -> 409 Conflict, `P2025` -> 404, validation errors -> 400) without leaking internal engine errors or SQL queries in production environments.
+- **Graceful Shutdown**: Added runtime hooks for `SIGINT` and `SIGTERM` signals in `server.ts`, cleanly terminating active HTTP sessions and disconnecting Prisma connections (`await prisma.$disconnect()`).
+- **Real Health Probes (`GET /api/health`, `GET /health`)**: Built dedicated `HealthController` dynamically running real Prisma database checks (`SELECT 1`), returning application uptime, DB connectivity status, and HTTP 503 upon offline databases.
+- **Structured Winston Logging**: Replaced generic `console.log/error` calls across startup, middleware, and health checking with a versatile singleton Winston logger (colorized output in development, fully structured JSON stack traces in production).
+- **Request ID Traceability**: Developed `requestIdMiddleware` embedding unique `X-Request-ID` UUIDs into request lifecycle, headers, logs, and error responses.
+- **Docker & Clustering Ops**: Authored multi-stage production `Dockerfile` (node:20-alpine), exhaustive `.dockerignore`, and PM2 `ecosystem.config.js` cluster orchestration profile.
+- **Database Backup & Disaster Recovery**: Created `BACKUP_STRATEGY.md` with explicit Neon PostgreSQL Point-in-Time Recovery guidelines, manual `pg_dump` CLI workflows, and comprehensive disaster recovery protocols.
+- **Zero Route Mutation Guarantee**: Maintained identical API routing architecture without introducing unneeded `/api/v1` breaking version prefixes.
+
+## [Phase 14] Assignments System
+- Advanced Git-Style Submission versioning using `AssignmentSubmissionAttempt`.
+- Comprehensive Grade Audit Logs (`AssignmentGradeHistory`).
+- Flexible scoping of assignments (`course_id`, `section_id`, `lesson_id`).
+- Native support for Multi-File Uploads via `AssignmentAttachment` and `SubmissionAttachment`.
+- Overdue vs Late submission distinctions on Student Dashboard endpoints.
+- Complex aggregation limits for scaling median scoring correctly.
+- Endpoints to create, update, delete, view, grade, and submit assignments.
+
+## [Phase 13] Learning Plans & Study Roadmap
+- Introduced `LearningPlan` and `LearningPlanItem` models to support custom, user-defined study roadmaps.
+- Designed endpoints entirely decoupled from `Enrollment`, `Wishlist`, and `Cart` data flows to maintain strict independence.
+- Implemented a resilient 3-step Prisma transaction sequence logic to handle `@@unique([learning_plan_id, sequence_order])` reordering correctly.
+- Added sequence normalization to ensure seamless indexing after any course is deleted from the learning plan.
+- Combined Progress and Items inside `GET /api/student/learning-plan` to return a fully frontend-ready object including `estimatedDuration` and `courseStatus`.
+- Integrated a Recommendation Engine with priority favoring same-category, published courses sorted by highest enrollment.
+- Restrained from using `onDelete: Cascade` on the `Course` relation to future-proof the module for Soft Deleting and Archiving features.
+
+## [Phase 12] Admin Dashboard
+- Created `AdminService` combining parallel execution `Promise.all` for highly optimized aggregation fetching.
+- Handled advanced business rules blocking self-edit for admins and guarding against status conflicts.
+- Structured Dashboard payload systematically matching frontend requirements.
+- Standardized uniform database-level pagination, searches, sorting, filtering avoiding manual TypeScript manipulation.
+- Generated dynamic recent activity timelines efficiently parsing multiple database tables.
+- All endpoints protected by role-based (`ADMIN`) and global authenticated guards.
 - Implemented `InstructorService` utilizing complex Prisma aggregates to power the dashboard.
 - Built strict business logic preventing cross-instructor access and filtering metrics properly.
 - Added `GET /api/instructor/profile` for basic instructor details.
@@ -27,7 +66,23 @@
 - Handled Prisma constraints (`P2002`) to ensure duplicate-free add to cart.
 - Added `POST /api/cart/items` to add courses to shopping cart.
 - Added `DELETE /api/cart/items/:courseId` to remove courses from shopping cart.
-- Added `GET /api/cart` to fetch student's shopping cart and dynamic calculation of total price.
+- Added `GET /api/cart` to fetch student's shopping cart and dynamic calculation of total
+
+## [Unreleased]
+
+### Added
+- **Phase 16.1: User Role Management**
+  - Added `UserRoleHistory` model to track role modifications.
+  - Implemented `GET /api/admin/users/:id` for user details.
+  - Implemented `PATCH /api/admin/users/:id/role` for updating user roles.
+  - Implemented `GET /api/admin/users/:id/role-history` to view audit logs.
+- **Phase 16: Authentication System**
+  - Implemented `POST /api/auth/register` and `POST /api/auth/login` using `bcryptjs` and `jsonwebtoken`.
+  - Enforced strict registration to default to `STUDENT` role.
+  - Added `POST /api/auth/logout` and `GET /api/auth/me`.
+  - Added `DELETED` to `UserStatus` enum in Prisma schema.
+  - Built JWT middleware and role-based authorization middleware.
+- **Phase 15: Student Dashboard & Progress** price.
 ## [Phase 8] Favorites System
 - Added `created_at` to `WishlistItem` in `schema.prisma`.
 - Implemented `FavoriteService` supporting Idempotent addition and removal.
