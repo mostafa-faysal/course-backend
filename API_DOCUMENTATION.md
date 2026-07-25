@@ -60,6 +60,25 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890",
+    "name": "Ahmed Mostafa",
+    "email": "ahmed.mostafa@example.com",
+    "role": "STUDENT",
+    "bio": "Software Engineer and Lifelong Learner",
+    "profile_picture": "https://cloud-storage.example.com/profiles/avatar.jpg",
+    "is_active": true,
+    "created_at": "2026-01-15T10:30:00.000Z",
+    "updated_at": "2026-07-25T14:20:00.000Z"
+  },
+  "requestId": "c3d4e5f6-7890-a1b2-c3d4-e5f67890a1b2"
+}
+```
+
   - **200**: Profile retrieved successfully
 
 ---
@@ -77,6 +96,24 @@
 // Check Schema
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890",
+    "name": "Ahmed Mostafa (Updated)",
+    "email": "ahmed.mostafa@example.com",
+    "role": "STUDENT",
+    "bio": "Senior Backend Developer & Systems Architect",
+    "profile_picture": "https://cloud-storage.example.com/profiles/new_avatar.jpg",
+    "updated_at": "2026-07-25T20:15:00.000Z"
+  },
+  "requestId": "d4e5f6a1-7890-b2c3-d4e5-f67890a1b2c3"
+}
+```
+
   - **200**: Profile updated successfully
 
 ---
@@ -94,6 +131,22 @@
   - `credentialId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "is_valid": true,
+    "credential_id": "CERT-2026-998877",
+    "student_name": "Ahmed Mostafa",
+    "course_title": "Advanced Microservices & Node.js Architecture",
+    "issued_at": "2026-07-20T12:00:00.000Z",
+    "instructor_name": "Eng. Mostafa Faysal"
+  },
+  "requestId": "e5f67890-a1b2-c3d4-e5f6-7890a1b2c3d4"
+}
+```
+
   - **200**: Certificate is valid
 
 ---
@@ -109,6 +162,29 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_enrolled_courses": 5,
+    "completed_courses": 2,
+    "in_progress_courses": 3,
+    "total_earned_certificates": 2,
+    "average_progress_percentage": 68.5,
+    "recent_activity": [
+      {
+        "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+        "course_title": "Modern TypeScript Strict Development",
+        "last_accessed_at": "2026-07-25T18:00:00.000Z",
+        "current_progress": 80
+      }
+    ]
+  },
+  "requestId": "f67890a1-b2c3-d4e5-f678-90a1b2c3d4e5"
+}
+```
+
   - **200**: Overview metrics retrieved
 
 ---
@@ -124,6 +200,28 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "enrollment_id": "enr-11223344",
+      "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+      "title": "Modern TypeScript Strict Development",
+      "thumbnail": "https://cloud-storage.example.com/courses/ts-thumb.jpg",
+      "instructor": {
+        "name": "Eng. Mostafa Faysal"
+      },
+      "progress_percentage": 80,
+      "status": "IN_PROGRESS",
+      "enrolled_at": "2026-06-01T09:00:00.000Z"
+    }
+  ],
+  "requestId": "a1b2c3d4-0011-2233-4455-667788990011"
+}
+```
+
   - **200**: Enrolled courses retrieved
 
 ---
@@ -139,6 +237,26 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+    "course_title": "Modern TypeScript Strict Development",
+    "last_lesson": {
+      "lesson_id": "less-889900",
+      "title": "Lesson 12: Generics and Type Guards",
+      "video_url": "https://videos.example.com/stream/less-889900",
+      "duration_seconds": 1420,
+      "stopped_at_seconds": 615
+    },
+    "next_lesson_id": "less-889901"
+  },
+  "requestId": "b2c3d4e5-1122-3344-5566-778899001122"
+}
+```
+
   - **200**: Continue watching data retrieved
 
 ---
@@ -154,6 +272,23 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "cert-556677",
+      "credential_id": "CERT-2026-998877",
+      "course_title": "Advanced Microservices & Node.js Architecture",
+      "issued_at": "2026-07-20T12:00:00.000Z",
+      "download_url": "https://cloud-storage.example.com/certificates/CERT-2026-998877.pdf"
+    }
+  ],
+  "requestId": "c3d4e5f6-2233-4455-6677-889900112233"
+}
+```
+
   - **200**: Certificates retrieved
 
 ---
@@ -171,6 +306,21 @@
   - `courseId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Certificate generated successfully",
+  "data": {
+    "id": "cert-889900",
+    "credential_id": "CERT-2026-112233",
+    "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+    "issued_at": "2026-07-25T20:17:36.936Z"
+  },
+  "requestId": "d4e5f6a1-3344-5566-7788-990011223344"
+}
+```
+
   - **201**: Certificate claimed successfully
 
 ---
@@ -195,6 +345,22 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Section created successfully",
+  "data": {
+    "id": "sec-102030",
+    "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+    "title": "Module 1: Introduction to Distributed Systems",
+    "sequence_order": 1,
+    "created_at": "2026-07-25T20:17:36.938Z"
+  },
+  "requestId": "sec001-req-uuid-4455"
+}
+```
+
   - **201**: Section created successfully
   - **400**: Validation error or Duplicate title
   - **401**: Unauthorized
@@ -225,6 +391,22 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Section updated successfully",
+  "data": {
+    "id": "sec-102030",
+    "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+    "title": "Module 1: Deep Dive into Distributed Systems (Updated)",
+    "sequence_order": 1,
+    "updated_at": "2026-07-25T20:17:36.938Z"
+  },
+  "requestId": "sec002-req-uuid-5566"
+}
+```
+
   - **200**: Section updated successfully
   - **400**: Validation error or Duplicate title
   - **401**: Unauthorized
@@ -248,6 +430,16 @@
   - `sectionId` (string): Section UUID
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Section deleted successfully",
+  "data": null,
+  "requestId": "sec003-req-uuid-6677"
+}
+```
+
   - **200**: Section deleted successfully
   - **400**: Validation error
   - **401**: Unauthorized
@@ -277,6 +469,24 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Review submitted successfully",
+  "data": {
+    "id": "rev-445566",
+    "course_id": "c7f8a9e0-1234-5678-9abc-def012345678",
+    "student_id": "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890",
+    "rating": 5,
+    "comment": "Outstanding course with incredible deep technical insights!",
+    "status": "APPROVED",
+    "created_at": "2026-07-25T20:17:36.938Z"
+  },
+  "requestId": "rev001-req-uuid-7788"
+}
+```
+
   - **201**: Review created successfully
   - **400**: Validation error
   - **401**: Unauthorized (Token missing/invalid)
@@ -299,6 +509,34 @@
   - `limit` (integer): Number of reviews per page
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "reviews": [
+      {
+        "id": "rev-445566",
+        "rating": 5,
+        "comment": "Outstanding course with incredible deep technical insights!",
+        "student": {
+          "name": "Ahmed Mostafa",
+          "profile_picture": "avatar.jpg"
+        },
+        "created_at": "2026-07-25T15:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 24,
+      "page": 1,
+      "limit": 10,
+      "pages": 3
+    }
+  },
+  "requestId": "rev002-req-uuid-8899"
+}
+```
+
   - **200**: Reviews retrieved successfully
   - **400**: Validation error
   - **404**: Course not found
@@ -324,6 +562,21 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Review updated successfully",
+  "data": {
+    "id": "rev-445566",
+    "rating": 4,
+    "comment": "Updated review comment after completing module 5.",
+    "updated_at": "2026-07-25T20:17:36.938Z"
+  },
+  "requestId": "rev003-req-uuid-9900"
+}
+```
+
   - **200**: Review updated successfully
   - **400**: Validation error
   - **401**: Unauthorized
@@ -344,6 +597,16 @@
   - `reviewId` (string): Review UUID
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Review removed successfully",
+  "data": null,
+  "requestId": "rev004-req-uuid-0011"
+}
+```
+
   - **200**: Review deleted successfully
   - **400**: Validation error
   - **401**: Unauthorized
@@ -362,6 +625,17 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "unreadCount": 3
+  },
+  "requestId": "notif-req-0001"
+}
+```
+
   - **200**: Unread count retrieved
 
 ---
@@ -375,6 +649,18 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "All notifications marked as read",
+  "data": {
+    "updated_count": 3
+  },
+  "requestId": "notif-req-0002"
+}
+```
+
   - **200**: All marked as read successfully
 
 ---
@@ -394,6 +680,23 @@
   - `priority` (string): Filter by priority (LOW, MEDIUM, HIGH)
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "notif-778899",
+      "title": "Assignment Graded",
+      "message": "Your submission for 'Node.js Cluster Lab' has been graded by the instructor.",
+      "is_read": false,
+      "created_at": "2026-07-25T19:30:00.000Z"
+    }
+  ],
+  "requestId": "notif-req-0003"
+}
+```
+
   - **200**: Notifications list retrieved
 
 ---
@@ -407,6 +710,16 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "All notifications cleared successfully",
+  "data": null,
+  "requestId": "notif-req-0004"
+}
+```
+
   - **200**: All notifications deleted
 
 ---
@@ -422,6 +735,21 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "notif-778899",
+    "title": "Assignment Graded",
+    "message": "Your submission for 'Node.js Cluster Lab' has been graded by the instructor.",
+    "is_read": true,
+    "created_at": "2026-07-25T19:30:00.000Z"
+  },
+  "requestId": "notif-req-0005"
+}
+```
+
   - **200**: Notification details
   - **404**: Notification not found or expired
 
@@ -438,6 +766,16 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Notification deleted",
+  "data": null,
+  "requestId": "notif-req-0006"
+}
+```
+
   - **200**: Notification deleted
 
 ---
@@ -453,6 +791,19 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Notification marked as read",
+  "data": {
+    "id": "notif-778899",
+    "is_read": true
+  },
+  "requestId": "notif-req-0007"
+}
+```
+
   - **200**: Marked as read
 
 ---
@@ -481,6 +832,25 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Lesson added successfully",
+  "data": {
+    "id": "less-556677",
+    "section_id": "sec-102030",
+    "title": "Lesson 1: Understanding Load Balancing with PM2",
+    "video_url": "https://cdn.example.com/videos/pm2-cluster.mp4",
+    "duration_seconds": 1250,
+    "sequence_order": 1,
+    "is_free_preview": true,
+    "created_at": "2026-07-25T20:17:36.938Z"
+  },
+  "requestId": "less-req-001"
+}
+```
+
   - **201**: Lesson created successfully
   - **400**: Validation error or duplicate title
   - **401**: Unauthorized
@@ -515,6 +885,21 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Lesson details updated successfully",
+  "data": {
+    "id": "less-556677",
+    "title": "Lesson 1: Understanding Load Balancing & Worker Threads",
+    "duration_seconds": 1300,
+    "updated_at": "2026-07-25T20:17:36.938Z"
+  },
+  "requestId": "less-req-002"
+}
+```
+
   - **200**: Lesson updated successfully
   - **400**: Validation error or duplicate title
   - **401**: Unauthorized
@@ -539,6 +924,16 @@
   - `lessonId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Lesson removed successfully",
+  "data": null,
+  "requestId": "less-req-003"
+}
+```
+
   - **200**: Lesson deleted successfully
   - **400**: Validation error
   - **401**: Unauthorized
@@ -557,6 +952,22 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Profile data
 
 ---
@@ -570,6 +981,20 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_revenue": 15400,
+    "active_students": 340,
+    "course_rating": 4.9,
+    "completion_rate": "82%"
+  },
+  "requestId": "req-uuid-analytics-fetch"
+}
+```
+
   - **200**: Dashboard stats
 
 ---
@@ -589,6 +1014,22 @@
   - `order` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Paginated courses
 
 ---
@@ -604,6 +1045,20 @@
   - `courseId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_revenue": 15400,
+    "active_students": 340,
+    "course_rating": 4.9,
+    "completion_rate": "82%"
+  },
+  "requestId": "req-uuid-analytics-fetch"
+}
+```
+
   - **200**: Course statistics
 
 ---
@@ -619,6 +1074,20 @@
   - `period` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_revenue": 15400,
+    "active_students": 340,
+    "course_rating": 4.9,
+    "completion_rate": "82%"
+  },
+  "requestId": "req-uuid-analytics-fetch"
+}
+```
+
   - **200**: Revenue statistics
 
 ---
@@ -638,6 +1107,22 @@
   - `order` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Paginated students
 
 ---
@@ -654,6 +1139,22 @@
   - `limit` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Latest enrollments
 
 ---
@@ -673,6 +1174,34 @@
   - `order` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "item-uuid-001",
+      "title": "Example Portfolio Entity Item",
+      "created_at": "2026-07-25T10:00:00.000Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "item-uuid-002",
+      "title": "Second Entity Record",
+      "created_at": "2026-07-24T14:20:00.000Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 10,
+    "pages": 1
+  },
+  "requestId": "req-uuid-collection-fetch"
+}
+```
+
   - **200**: Paginated reviews
 
 ---
@@ -688,6 +1217,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Home data retrieved successfully
 
 ---
@@ -701,6 +1246,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Hero data retrieved
 
 ---
@@ -714,6 +1275,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Categories retrieved
 
 ---
@@ -727,6 +1304,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Featured courses retrieved
 
 ---
@@ -740,6 +1333,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Top instructors retrieved
 
 ---
@@ -753,6 +1362,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Statistics retrieved
 
 ---
@@ -766,6 +1391,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Testimonials retrieved
 
 ---
@@ -779,6 +1420,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: FAQs retrieved
 
 ---
@@ -792,6 +1449,22 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Footer data retrieved
 
 ---
@@ -805,6 +1478,22 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: List of favorite courses retrieved successfully
   - **401**: Unauthorized
   - **403**: Forbidden
@@ -824,6 +1513,20 @@
   - `courseId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **200**: Course added to favorites successfully
   - **401**: Unauthorized
   - **404**: Course not found or not published
@@ -843,6 +1546,16 @@
   - `courseId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Resource deleted successfully",
+  "data": null,
+  "requestId": "req-uuid-delete-action"
+}
+```
+
   - **200**: Course removed from favorites successfully
   - **401**: Unauthorized
 
@@ -859,6 +1572,22 @@
   - `courseId` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Favorite status retrieved successfully
   - **401**: Unauthorized
 
@@ -888,6 +1617,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **201**: Course created successfully
   - **400**: Validation error or Instructor/Category not found
 
@@ -915,6 +1658,34 @@
   - `sort_order` (string): Sort order
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "item-uuid-001",
+      "title": "Example Portfolio Entity Item",
+      "created_at": "2026-07-25T10:00:00.000Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "item-uuid-002",
+      "title": "Second Entity Record",
+      "created_at": "2026-07-24T14:20:00.000Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 10,
+    "pages": 1
+  },
+  "requestId": "req-uuid-collection-fetch"
+}
+```
+
   - **200**: List of courses retrieved successfully
 
 ---
@@ -939,6 +1710,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-put-action"
+}
+```
+
   - **200**: Course updated successfully
   - **400**: Invalid inputs or category not found
   - **401**: Unauthorized (Token missing/invalid)
@@ -960,6 +1745,16 @@
   - `id` (string): Course UUID
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Resource deleted successfully",
+  "data": null,
+  "requestId": "req-uuid-delete-action"
+}
+```
+
   - **200**: Course deleted successfully
   - **400**: Foreign key relation violation or bad request
   - **401**: Unauthorized (Token missing/invalid)
@@ -979,6 +1774,22 @@
   - `id` (string): Course UUID
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Course details retrieved successfully
   - **400**: Invalid UUID format
   - **404**: Course not found
@@ -996,6 +1807,20 @@
   - `id` (string): Course UUID
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_revenue": 15400,
+    "active_students": 340,
+    "course_rating": 4.9,
+    "completion_rate": "82%"
+  },
+  "requestId": "req-uuid-analytics-fetch"
+}
+```
+
   - **200**: Rating summary retrieved successfully
   - **400**: Invalid UUID format
   - **404**: Course not found
@@ -1016,6 +1841,22 @@
   - `limit` (integer): Number of related courses to return
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Related courses retrieved successfully
   - **400**: Invalid UUID format
   - **404**: Course not found
@@ -1032,6 +1873,34 @@
   - None
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "item-uuid-001",
+      "title": "Example Portfolio Entity Item",
+      "created_at": "2026-07-25T10:00:00.000Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "item-uuid-002",
+      "title": "Second Entity Record",
+      "created_at": "2026-07-24T14:20:00.000Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 10,
+    "pages": 1
+  },
+  "requestId": "req-uuid-collection-fetch"
+}
+```
+
   - **200**: List of categories
 
 ---
@@ -1054,6 +1923,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **201**: Category created
 
 ---
@@ -1071,6 +1954,22 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Category details
   - **404**: Category not found
 
@@ -1094,6 +1993,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-put-action"
+}
+```
+
   - **200**: Category updated
 
 ---
@@ -1111,6 +2024,16 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Resource deleted successfully",
+  "data": null,
+  "requestId": "req-uuid-delete-action"
+}
+```
+
   - **204**: Category deleted
 
 ---
@@ -1130,6 +2053,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **200**: Course added to cart successfully
   - **400**: Already enrolled
   - **401**: Unauthorized
@@ -1150,6 +2087,16 @@
   - `courseId` (string): The ID of the course to remove
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Resource deleted successfully",
+  "data": null,
+  "requestId": "req-uuid-delete-action"
+}
+```
+
   - **200**: Course removed from cart successfully
   - **401**: Unauthorized
   - **403**: Forbidden
@@ -1166,6 +2113,22 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Cart details retrieved successfully
   - **401**: Unauthorized
   - **403**: Forbidden
@@ -1188,6 +2151,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **201**: User registered successfully
   - **400**: Bad request (e.g., email already exists)
 
@@ -1208,6 +2185,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **200**: Logged in successfully
   - **401**: Invalid credentials
   - **403**: Account suspended or deleted
@@ -1223,6 +2214,20 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **200**: Logged out successfully
 
 ---
@@ -1236,6 +2241,22 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Returns user ID and Role
 
 ---
@@ -1256,6 +2277,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-patch-action"
+}
+```
+
   - **200**: Password updated successfully
   - **400**: Validation Error
   - **403**: Forbidden (Incorrect current password or password reuse)
@@ -1271,6 +2306,20 @@
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_revenue": 15400,
+    "active_students": 340,
+    "course_rating": 4.9,
+    "completion_rate": "82%"
+  },
+  "requestId": "req-uuid-analytics-fetch"
+}
+```
+
   - **200**: Dashboard statistics retrieved successfully
   - **401**: Unauthorized
   - **403**: Forbidden (Admin only)
@@ -1295,6 +2344,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **201**: User created successfully
   - **403**: Forbidden (Cannot assign ADMIN role)
   - **409**: Conflict (Email already exists)
@@ -1320,6 +2383,34 @@
   - `status` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "item-uuid-001",
+      "title": "Example Portfolio Entity Item",
+      "created_at": "2026-07-25T10:00:00.000Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "item-uuid-002",
+      "title": "Second Entity Record",
+      "created_at": "2026-07-24T14:20:00.000Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 10,
+    "pages": 1
+  },
+  "requestId": "req-uuid-collection-fetch"
+}
+```
+
   - **200**: Users retrieved successfully
 
 ---
@@ -1341,6 +2432,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-patch-action"
+}
+```
+
   - **200**: Status updated successfully
   - **403**: Forbidden
   - **404**: Not Found
@@ -1361,6 +2466,22 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: User details retrieved successfully
   - **404**: User not found
 
@@ -1379,6 +2500,16 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Resource deleted successfully",
+  "data": null,
+  "requestId": "req-uuid-delete-action"
+}
+```
+
   - **200**: User account deactivated successfully
   - **403**: Forbidden (Escalation or self-deletion)
   - **404**: User not found
@@ -1404,6 +2535,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-patch-action"
+}
+```
+
   - **200**: Role updated successfully
   - **403**: Forbidden (Escalation or self-modification)
   - **404**: User not found
@@ -1424,6 +2569,20 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **200**: Password reset successfully
   - **403**: Forbidden (Escalation or self-reset)
   - **404**: User not found
@@ -1443,6 +2602,22 @@
   - `id` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: History retrieved successfully
   - **404**: User not found
 
@@ -1468,6 +2643,22 @@
   - `instructor` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "entity-uuid-8899",
+    "name": "Entity Details Object",
+    "metadata": {
+      "attribute": "value"
+    },
+    "updated_at": "2026-07-25T18:00:00.000Z"
+  },
+  "requestId": "req-uuid-single-entity"
+}
+```
+
   - **200**: Courses retrieved successfully
 
 ---
@@ -1491,6 +2682,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-patch-action"
+}
+```
+
   - **200**: Status updated successfully
 
 ---
@@ -1514,6 +2719,34 @@
   - `status` (string): 
 - **Request Body:** None
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "item-uuid-001",
+      "title": "Example Portfolio Entity Item",
+      "created_at": "2026-07-25T10:00:00.000Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "item-uuid-002",
+      "title": "Second Entity Record",
+      "created_at": "2026-07-24T14:20:00.000Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 10,
+    "pages": 1
+  },
+  "requestId": "req-uuid-collection-fetch"
+}
+```
+
   - **200**: Reviews retrieved successfully
 
 ---
@@ -1537,6 +2770,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Updated successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-patch-action"
+}
+```
+
   - **200**: Status updated successfully
 
 ---
@@ -1559,6 +2806,20 @@
 }
 ```
 - **Response:**
+  - **Example Return Object (JSON Schema):**
+```json
+{
+  "success": true,
+  "message": "Created successfully",
+  "data": {
+    "id": "res-uuid-item-001",
+    "status": "ACTIVE",
+    "timestamp": "2026-07-25T20:30:00.000Z"
+  },
+  "requestId": "req-uuid-post-action"
+}
+```
+
   - **201**: Notification broadcasted
 
 ---
