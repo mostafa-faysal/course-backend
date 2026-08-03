@@ -1,7 +1,14 @@
 import { prisma } from '../config/db';
 import { NotificationHelper } from '../helpers/notification.helper';
+import { cache, CACHE_TAGS } from '../cache';
 
 export class ReviewService {
+  private static async invalidateReviewCaches() {
+    await Promise.all([
+      cache.invalidateByTag(CACHE_TAGS.HOME_TOP_RATED),
+      cache.invalidateByTag(CACHE_TAGS.HOME_TESTIMONIALS),
+    ]);
+  }
   /**
    * Create a new review for a course
    */
@@ -58,6 +65,7 @@ export class ReviewService {
       await NotificationHelper.sendNewCourseReview(enrollment.course.instructor_id, courseId, data.rating);
     }
 
+    await this.invalidateReviewCaches();
     return review;
   }
 
@@ -152,6 +160,7 @@ export class ReviewService {
       },
     });
 
+    await this.invalidateReviewCaches();
     return updatedReview;
   }
 
@@ -188,6 +197,7 @@ export class ReviewService {
       throw error;
     }
 
+    await this.invalidateReviewCaches();
     return true;
   }
 

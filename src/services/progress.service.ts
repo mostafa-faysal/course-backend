@@ -11,9 +11,21 @@ export class ProgressTrackingService {
     // 1. Lock the enrollment to prevent Write Skew
     await tx.$executeRaw`SELECT id FROM "Enrollment" WHERE id = ${enrollmentId} FOR UPDATE`;
 
-    // 2. Get total lessons for the course
+    const enrollment = await tx.enrollment.findUnique({
+      where: { id: enrollmentId },
+      select: { student_id: true }
+    });
+    const studentId = enrollment?.student_id || '';
+
+    // 2. Get total accessible lessons for the course
     const totalLessons = await tx.lesson.count({
-      where: { section: { course_id: courseId } },
+      where: {
+        section: { course_id: courseId },
+        OR: [
+          { is_targeted: false },
+          { accessible_to: { some: { student_id: studentId } } }
+        ]
+      },
     });
 
     // 3. Get completed lessons for this enrollment
@@ -201,7 +213,13 @@ export class ProgressTrackingService {
     }
 
     const totalLessons = await prisma.lesson.count({
-      where: { section: { course_id: courseId } }
+      where: {
+        section: { course_id: courseId },
+        OR: [
+          { is_targeted: false },
+          { accessible_to: { some: { student_id: studentId } } }
+        ]
+      }
     });
 
     const completedLessonIds = enrollment.lesson_progress.map(lp => lp.lesson_id);

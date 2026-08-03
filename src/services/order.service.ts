@@ -104,6 +104,8 @@ export class OrderService {
                 id: true,
                 title: true,
                 thumbnail: true,
+                card_image: true,
+                cover_image: true,
               }
             }
           }

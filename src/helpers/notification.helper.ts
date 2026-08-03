@@ -223,4 +223,33 @@ export class NotificationHelper {
     );
     await Promise.all(promises);
   }
+
+  static async sendNewLessonPublished(studentIds: string[], courseId: string, lessonTitle: string, courseName: string) {
+    const promises = studentIds.map(studentId => 
+      this.send({
+        user_id: studentId,
+        title: 'محاضرة جديدة متوفرة',
+        message: `تمت إضافة محاضرة جديدة: "${lessonTitle}" في كورس "${courseName}". يمكنك مشاهدتها الآن في غرفة الدراسة!`,
+        type: 'COURSE',
+        priority: 'HIGH',
+        action_url: `/student-dashboard/courses/${courseId}/classroom`,
+        target_type: 'COURSE',
+        target_id: courseId,
+      })
+    );
+    await Promise.all(promises);
+  }
+
+  static async sendEnrollmentRevoked(studentId: string, courseId: string, courseName: string) {
+    return this.send({
+      user_id: studentId,
+      title: 'إلغاء الاشتراك في الكورس',
+      message: `تم سحب صلاحية وصولك إلى الكورس: "${courseName}". يرجى التواصل مع الإنستراكتور أو الإدارة لمزيد من التفاصيل.`,
+      type: 'ENROLLMENT',
+      priority: 'HIGH',
+      action_url: `/student-dashboard/courses`,
+      target_type: 'COURSE',
+      target_id: courseId,
+    });
+  }
 }

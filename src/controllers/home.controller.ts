@@ -2,42 +2,49 @@ import { Request, Response, NextFunction } from 'express';
 import { HomeService } from '../services/home.service';
 
 export class HomeController {
-  // 1. Aggregated Endpoint
+  // 1. Lightweight Global Shell / Config Endpoint
   public static async getHomeData(req: Request, res: Response, next: NextFunction) {
     try {
-      const [
-        hero,
-        categories,
-        featuredCourses,
-        topInstructors,
-        testimonials,
-        statistics,
-        faq,
-        footer,
-      ] = await Promise.all([
-        HomeService.getHeroData(),
-        HomeService.getCategories(),
-        HomeService.getFeaturedCourses(),
-        HomeService.getTopInstructors(),
-        HomeService.getTestimonials(),
-        HomeService.getStatistics(),
-        HomeService.getFAQ(),
-        HomeService.getFooter(),
-      ]);
-
+      const data = await HomeService.getConfig();
       res.status(200).json({
         status: 'success',
-        data: { hero, categories, featuredCourses, topInstructors, testimonials, statistics, faq, footer },
+        data,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // 2. Individual Endpoints
+  public static async getConfig(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getConfig();
+      res.status(200).json({
+        status: 'success',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // 2. Individual Section Endpoints (For Lazy Loading on Front-End)
   public static async getHero(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await HomeService.getHeroData();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
+  public static async getPartners(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getPartners();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
+  public static async getWhyChooseUs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getWhyChooseUs();
       res.status(200).json({ status: 'success', data });
     } catch (error) { next(error); }
   }
@@ -52,6 +59,27 @@ export class HomeController {
   public static async getFeaturedCourses(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await HomeService.getFeaturedCourses();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
+  public static async getTopRatedCourses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getTopRatedCourses();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
+  public static async getPopularCourses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getPopularCourses();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
+  public static async getNewCourses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getNewCourses();
       res.status(200).json({ status: 'success', data });
     } catch (error) { next(error); }
   }
@@ -84,9 +112,24 @@ export class HomeController {
     } catch (error) { next(error); }
   }
 
+  public static async getSettings(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await HomeService.getSettings();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
   public static async getFooter(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await HomeService.getFooter();
+      res.status(200).json({ status: 'success', data });
+    } catch (error) { next(error); }
+  }
+
+  public static async getSearchSuggestions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = (req.query.q || req.query.query || '') as string;
+      const data = await HomeService.getSearchSuggestions(query);
       res.status(200).json({ status: 'success', data });
     } catch (error) { next(error); }
   }

@@ -19,8 +19,12 @@ export class UserController {
       const userId = req.user!.id;
       const data = updateProfileSchema.parse(req.body);
       
-      const profile = await UserService.updateProfile(userId, data);
-      res.status(200).json({ success: true, data: profile });
+      const profile = await UserService.updateProfile(userId, data, req.file);
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: profile
+      });
     } catch (error) {
       next(error);
     }

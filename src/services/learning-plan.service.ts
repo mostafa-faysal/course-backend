@@ -27,7 +27,12 @@ export class LearningPlanService {
           select: {
             title: true,
             thumbnail: true,
+            card_image: true,
+            cover_image: true,
             status: true,
+            duration_hours: true,
+            duration_weeks: true,
+            projects_count: true,
             instructor: { select: { id: true, full_name: true } },
             category: { select: { id: true, name: true } }
           }
@@ -133,6 +138,8 @@ export class LearningPlanService {
         id: cid,
         title: item.course.title,
         thumbnail: item.course.thumbnail,
+        card_image: item.course.card_image,
+        cover_image: item.course.cover_image,
         instructor: item.course.instructor,
         category: item.course.category,
         enrolled,
@@ -311,7 +318,12 @@ export class LearningPlanService {
         id: true,
         title: true,
         thumbnail: true,
+        card_image: true,
+        cover_image: true,
         price: true,
+        duration_hours: true,
+        duration_weeks: true,
+        projects_count: true,
         instructor: { select: { id: true, full_name: true } },
         category: { select: { id: true, name: true } }
       }
@@ -336,7 +348,12 @@ export class LearningPlanService {
           id: true,
           title: true,
           thumbnail: true,
+          card_image: true,
+          cover_image: true,
           price: true,
+          duration_hours: true,
+          duration_weeks: true,
+          projects_count: true,
           instructor: { select: { id: true, full_name: true } },
           category: { select: { id: true, name: true } }
         }

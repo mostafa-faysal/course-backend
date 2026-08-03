@@ -1,5 +1,6 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, EnrollmentStatus } from '@prisma/client';
 import { prisma } from '../config/db';
+import { NotificationHelper } from '../helpers/notification.helper';
 
 export class InstructorService {
   /**
@@ -117,7 +118,23 @@ export class InstructorService {
         skip,
         take: limit,
         orderBy: { [orderByField]: orderByOrder },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          price: true,
+          discount_price: true,
+          thumbnail: true,
+          card_image: true,
+          cover_image: true,
+          status: true,
+          level: true,
+          language: true,
+          duration_hours: true,
+          duration_weeks: true,
+          projects_count: true,
+          created_at: true,
+          updated_at: true,
           _count: {
             select: { enrollments: true, reviews: true },
           },
@@ -241,13 +258,17 @@ export class InstructorService {
   /**
    * 6. Student Analytics
    */
-  public static async getStudents(instructorId: string, page: number, limit: number, search?: string, sort: string = 'created_at', order: string = 'desc') {
+  public static async getStudents(instructorId: string, page: number, limit: number, search?: string, courseId?: string, sort: string = 'created_at', order: string = 'desc') {
     const skip = (page - 1) * limit;
+
+    const courseFilter: any = { instructor_id: instructorId };
+    if (courseId) courseFilter.id = courseId;
 
     const studentWhere: Prisma.UserWhereInput = {
       enrollments: {
         some: {
-          course: { instructor_id: instructorId }
+          course: courseFilter,
+          status: 'ACTIVE',
         }
       },
       ...(search ? {
@@ -275,8 +296,8 @@ export class InstructorService {
           created_at: true,
           last_login: true,
           enrollments: {
-            where: { course: { instructor_id: instructorId } },
-            select: { progress_percentage: true, completed_at: true },
+            where: { course: courseFilter, status: 'ACTIVE' },
+            select: { progress_percentage: true, completed_at: true, course_id: true, course: { select: { id: true, title: true } } },
           }
         }
       }),
@@ -379,5 +400,42 @@ export class InstructorService {
       totalPages: Math.ceil(total / limit),
       data: reviews,
     };
+  }
+
+  /**
+   * 8. Revoke Student Enrollment (Instructor capability)
+   */
+  public static async revokeStudentEnrollment(instructorId: string, courseId: string, studentId: string) {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, title: true, instructor_id: true }
+    });
+    if (!course || course.instructor_id !== instructorId) {
+      throw new Error('Forbidden: Course not found or not owned by instructor');
+    }
+
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { student_id_course_id: { student_id: studentId, course_id: courseId } }
+    });
+    if (!enrollment) {
+      throw new Error('Not Found: Student is not enrolled in this course');
+    }
+    if (enrollment.status === 'REVOKED') {
+      throw new Error('Conflict: Enrollment is already revoked');
+    }
+
+    const updated = await prisma.enrollment.update({
+      where: { id: enrollment.id },
+      data: { status: 'REVOKED' },
+      select: { id: true, student_id: true, course_id: true, status: true }
+    });
+
+    try {
+      await NotificationHelper.sendEnrollmentRevoked(studentId, courseId, course.title);
+    } catch (e) {
+      console.error('Error sending revocation notification:', e);
+    }
+
+    return updated;
   }
 }

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { CourseUtil } from '../utils/course.util';
+import { NotificationHelper } from '../helpers/notification.helper';
 const prisma = new PrismaClient();
 
 export class LessonService {
@@ -11,7 +12,7 @@ export class LessonService {
     sectionId: string,
     userId: string,
     role: string,
-    data: { title: string; duration: number; video_url?: string; is_free_preview?: boolean; sequence_order?: number }
+    data: { title: string; duration: number; video_url?: string; is_free_preview?: boolean; sequence_order?: number; target_student_ids?: string[] }
   ) {
     // 1. Verify course ownership
     await CourseUtil.verifyCourseOwnership(courseId, userId, role);
@@ -36,7 +37,7 @@ export class LessonService {
     }
 
     // 4. Sequence Ordering Algorithm inside a Transaction
-    return prisma.$transaction(async (tx) => {
+    const newLesson = await prisma.$transaction(async (tx) => {
       // IMPORTANT: Acquire exclusive row-level lock on the Section BEFORE any other queries.
       // This forces concurrent lesson updates for the same section to run sequentially,
       // entirely eliminating Write Skew anomalies (duplicate sequence_order values).
@@ -70,19 +71,70 @@ export class LessonService {
       }
 
       // 5. Create the lesson
-      const newLesson = await tx.lesson.create({
+      const isTargeted = Array.isArray(data.target_student_ids) && data.target_student_ids.length > 0;
+      const created = await tx.lesson.create({
         data: {
           section_id: sectionId,
           title: trimmedTitle,
           duration: data.duration,
           video_url: data.video_url || null,
           is_free_preview: data.is_free_preview || false,
+          is_targeted: isTargeted,
           sequence_order: finalSequenceOrder,
         },
       });
 
-      return newLesson;
+      if (isTargeted && data.target_student_ids) {
+        const validEnrollments = await tx.enrollment.findMany({
+          where: {
+            course_id: courseId,
+            student_id: { in: data.target_student_ids },
+            status: 'ACTIVE',
+          },
+          select: { student_id: true },
+        });
+        const studentIdsToGrant = validEnrollments.map((e) => e.student_id);
+        if (studentIdsToGrant.length > 0) {
+          await tx.lessonAccess.createMany({
+            data: studentIdsToGrant.map((id) => ({
+              lesson_id: created.id,
+              student_id: id,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      return created;
     }, { maxWait: 10000, timeout: 20000 });
+
+    // 6. Asynchronously send notifications to target students or all course students
+    try {
+      const course = await prisma.course.findUnique({ where: { id: courseId }, select: { title: true } });
+      if (course) {
+        let recipientIds: string[] = [];
+        if (newLesson.is_targeted) {
+          const accesses = await prisma.lessonAccess.findMany({
+            where: { lesson_id: newLesson.id },
+            select: { student_id: true },
+          });
+          recipientIds = accesses.map((a) => a.student_id);
+        } else {
+          const enrollments = await prisma.enrollment.findMany({
+            where: { course_id: courseId, status: 'ACTIVE' },
+            select: { student_id: true },
+          });
+          recipientIds = enrollments.map((e) => e.student_id);
+        }
+        if (recipientIds.length > 0) {
+          await NotificationHelper.sendNewLessonPublished(recipientIds, courseId, newLesson.title, course.title);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to dispatch lesson notifications:', err);
+    }
+
+    return newLesson;
   }
 
   /**

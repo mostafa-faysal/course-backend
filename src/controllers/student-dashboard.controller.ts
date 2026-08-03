@@ -73,4 +73,22 @@ export class StudentDashboardController {
       next(error);
     }
   }
+
+  public static async getClassroom(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { courseId } = courseIdParamSchema.parse(req.params);
+      const studentId = req.user!.id;
+
+      const data = await StudentDashboardService.getStudentClassroom(studentId, courseId);
+      res.status(200).json({ status: 'success', data });
+    } catch (error: any) {
+      if (error.message?.includes('Forbidden')) {
+        return res.status(403).json({ status: 'error', message: error.message });
+      }
+      if (error.message?.includes('Not Found')) {
+        return res.status(404).json({ status: 'error', message: error.message });
+      }
+      next(error);
+    }
+  }
 }

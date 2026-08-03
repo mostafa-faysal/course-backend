@@ -66,8 +66,6 @@ router.get('/:id', validate(getCategorySchema), CategoryController.getCategoryBy
  *             properties:
  *               name:
  *                 type: string
- *               icon:
- *                 type: string
  *     responses:
  *       201:
  *         description: Category created
@@ -103,8 +101,6 @@ router.post(
  *             type: object
  *             properties:
  *               name:
- *                 type: string
- *               icon:
  *                 type: string
  *     responses:
  *       200:

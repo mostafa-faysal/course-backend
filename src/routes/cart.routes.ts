@@ -128,6 +128,12 @@ router.delete(
  *                           thumbnail:
  *                             type: string
  *                             nullable: true
+ *                           card_image:
+ *                             type: string
+ *                             nullable: true
+ *                           cover_image:
+ *                             type: string
+ *                             nullable: true
  *                           price:
  *                             type: number
  *                           discount_price:

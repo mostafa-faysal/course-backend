@@ -11,6 +11,7 @@ export const createLessonSchema = z.object({
     video_url: z.string().url('Invalid video URL format').optional(),
     is_free_preview: z.boolean().optional(),
     sequence_order: z.number().int('Sequence order must be an integer').min(1, 'Sequence order must be at least 1').optional(),
+    target_student_ids: z.array(z.string().uuid('Invalid student UUID format')).optional(),
   }),
 });
 

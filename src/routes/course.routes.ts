@@ -63,6 +63,35 @@ const router = Router();
  *               language:
  *                 type: string
  *                 example: "English"
+ *               duration_hours:
+ *                 type: integer
+ *                 example: 120
+ *               duration_weeks:
+ *                 type: integer
+ *                 example: 16
+ *               projects_count:
+ *                 type: integer
+ *                 example: 6
+ *               thumbnail:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/thumb.webp"
+ *               card_image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/card.webp"
+ *               cover_image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/cover.webp"
+ *               preview_video:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/video/upload/preview.mp4"
+ *               preview_image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/poster.webp"
  *               status:
  *                 type: string
  *                 enum: [DRAFT, PUBLISHED, HIDDEN]
@@ -192,6 +221,35 @@ router.get('/', validate(getAllCoursesSchema), CourseController.getAllCourses);
  *               discount_price:
  *                 type: number
  *                 example: 39.99
+ *               duration_hours:
+ *                 type: integer
+ *                 example: 120
+ *               duration_weeks:
+ *                 type: integer
+ *                 example: 16
+ *               projects_count:
+ *                 type: integer
+ *                 example: 6
+ *               thumbnail:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/thumb.webp"
+ *               card_image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/card.webp"
+ *               cover_image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/cover.webp"
+ *               preview_video:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/video/upload/preview.mp4"
+ *               preview_image:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://res.cloudinary.com/demo/image/upload/poster.webp"
  *     responses:
  *       200:
  *         description: Course updated successfully

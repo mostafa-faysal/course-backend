@@ -126,6 +126,7 @@ model User {
   action_histories       UserActionHistory[]    @relation("UserActions")
   actions_performed      UserActionHistory[]    @relation("AdminActions")
   notifications   Notification[]
+  accessible_lessons LessonAccess[]
 }
 
 
@@ -146,11 +147,17 @@ model Course {
   title              String
   description        String
   thumbnail          String?
+  card_image         String?
+  cover_image        String?
   preview_video      String?
+  preview_image      String?      // Video poster image displayed before playing preview_video
   price              Float
   discount_price     Float?
   level              String?
   language           String?
+  duration_hours     Int?         // Estimated study duration in hours
+  duration_weeks     Int?         // Course duration in weeks
+  projects_count     Int?         // Number of practical projects included
   requirements       String[]     // Array of strings
   learning_outcomes  String[]     // Array of strings
   status             CourseStatus @default(DRAFT)
@@ -192,15 +199,32 @@ model Lesson {
   duration        Int      // Duration in minutes or seconds
   video_url       String?
   is_free_preview Boolean  @default(false)
+  is_targeted     Boolean  @default(false)
   sequence_order  Int
 
   // Relations
-  section         Section  @relation(fields: [section_id], references: [id])
+  section         Section        @relation(fields: [section_id], references: [id])
   course_progress CourseProgress[]
   lesson_progress LessonProgress[]
   assignments     Assignment[]
+  accessible_to   LessonAccess[]
 
   @@index([section_id, sequence_order])
+}
+
+model LessonAccess {
+  id         String   @id @default(uuid())
+  lesson_id  String
+  student_id String
+  created_at DateTime @default(now())
+
+  // Relations
+  lesson     Lesson   @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+  student    User     @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([lesson_id, student_id])
+  @@index([student_id])
+  @@index([lesson_id])
 }
 
 model Enrollment {

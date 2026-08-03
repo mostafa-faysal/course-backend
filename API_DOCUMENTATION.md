@@ -1,15 +1,23 @@
 # API Documentation
 
+## Frontend-Agnostic Architecture & Zero-Mock Enforcement (StudyFlow Production Specification)
+
+- **100% Frontend-Agnostic Response Contracts:** All API endpoints strictly return core business data (identifiers, titles, descriptions, metrics, dates) and NEVER embed presentation-specific UI attributes such as `icon`, `emoji`, `color`, `background`, `style`, or `svg`. Visual rendering decisions, design systems, and icon pack selections (Lucide, Heroicons, Tabler, etc.) remain solely the responsibility of frontend consumer applications.
+- **Zero-Mock & Authentic Database Aggregation:** Endpoints are permanently stripped of fallback dummy arrays or artificial statistics formulas. When database queries yield empty records, APIs return pristine empty arrays `[]`. Platform metrics (active students, completed enrollments, review ratings, total revenue) are derived dynamically via optimized relational PostgreSQL aggregations.
+
 ## Global System Architecture & Security Responses (Production Readiness)
 
 ### Request Correlation & Traceability (`X-Request-ID`)
+
 - **Header in Responses:** Every API response now returns an `X-Request-ID` header containing a UUID.
 - **Error Responses:** In case of any error (HTTP 400, 401, 403, 404, 409, 500), the generated JSON payload explicitly embeds `"requestId": "<uuid>"` to allow developers and system admins to trace logs precisely via Winston structured JSON logs.
 
 ### Rate Limiting (Protection Against DDoS & Brute-Force)
+
 - **Global Limits:** Limited to 100 requests per IP every 15 minutes.
 - **Authentication Routes Limit (`/api/auth/login`, `/api/auth/register`, `/api/auth/change-password`):** Strict maximum of 10 attempts per IP every 15 minutes.
 - **Exceeding Limits Response (HTTP 429 Too Many Requests):**
+
 ```json
 {
   "status": "error",
@@ -29,6 +37,7 @@
 - **Headers:** None
 - **Response:**
   - **200 OK (Healthy & Connected):**
+
 ```json
 {
   "status": "ok",
@@ -38,7 +47,9 @@
   "requestId": "uuid"
 }
 ```
-  - **503 Service Unavailable (Database Disconnected):**
+
+- **503 Service Unavailable (Database Disconnected):**
+
 ```json
 {
   "status": "error",
@@ -61,6 +72,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -79,7 +91,7 @@
 }
 ```
 
-  - **200**: Profile retrieved successfully
+- **200**: Profile retrieved successfully
 
 ---
 
@@ -92,11 +104,14 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 // Check Schema
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -114,7 +129,7 @@
 }
 ```
 
-  - **200**: Profile updated successfully
+- **200**: Profile updated successfully
 
 ---
 
@@ -124,14 +139,16 @@
 - **Description:** للتحقق من صحة شهادة الطالب باستخدام رمز الاعتماد (Credential ID).
 
 **English Details:** مسار عام (Public Endpoint) لا يتطلب تسجيل دخول. وظيفته هي التحقق من صحة أي شهادة مصدرة من المنصة باستخدام رقم الاعتماد (Credential ID). يمكن استخدامه من قبل أصحاب العمل أو أي جهة للتأكد من أن الشهادة صحيحة ومسجلة في النظام.
+
 - **Token Required:** No
 - **Headers:**
   - None
 - **Path Parameters:**
-  - `credentialId` (string): 
+  - `credentialId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -147,7 +164,7 @@
 }
 ```
 
-  - **200**: Certificate is valid
+- **200**: Certificate is valid
 
 ---
 
@@ -157,12 +174,14 @@
 - **Description:** يجلب ملخص أداء الطالب (Overview) لإحصائيات الإنجاز السريعة.
 
 **English Details:** يجلب ملخص أداء الطالب (Overview) ليتم عرضه في أعلى لوحة التحكم (Dashboard). يعيد إحصائيات سريعة مثل عدد الكورسات المكتملة، الكورسات قيد الدراسة، وإجمالي الشهادات التي حصل عليها الطالب. مفيد لواجهة المستخدم لتوفير نظرة سريعة على الإنجازات.
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -185,7 +204,7 @@
 }
 ```
 
-  - **200**: Overview metrics retrieved
+- **200**: Overview metrics retrieved
 
 ---
 
@@ -195,12 +214,14 @@
 - **Description:** يجلب جميع الكورسات التي سجل فيها الطالب (My Courses).
 
 **English Details:** يجلب جميع الكورسات التي سجل فيها الطالب (My Courses) مع تفاصيل التقدم (Progress Percentage) الخاص بكل كورس. يستخدم في الفرونت اند لعرض مكتبة الكورسات الخاصة بالطالب.
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -222,7 +243,7 @@
 }
 ```
 
-  - **200**: Enrolled courses retrieved
+- **200**: Enrolled courses retrieved
 
 ---
 
@@ -232,12 +253,14 @@
 - **Description:** يجلب أحدث الكورسات التي يتفاعل معها الطالب حالياً لاستكمالها (Continue Watching).
 
 **English Details:** يجلب أحدث الكورسات التي يتفاعل معها الطالب حالياً مع تحديد آخر درس شاهده للعودة إليه مباشرة (Resume). يستخدم لعرض عنصر تحكم مباشر (Continue Watching) في لوحة التحكم لتسهيل الاستكمال.
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -257,7 +280,7 @@
 }
 ```
 
-  - **200**: Continue watching data retrieved
+- **200**: Continue watching data retrieved
 
 ---
 
@@ -267,12 +290,14 @@
 - **Description:** يجلب قائمة بجميع الشهادات التي حصل عليها الطالب (شهاداتي).
 
 **English Details:** يجلب قائمة بجميع الشهادات التي حصل عليها الطالب. يُستخدم في لوحة تحكم الطالب بداخل قسم (شهاداتي) لتنزيلها أو مشاركتها.
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -289,7 +314,7 @@
 }
 ```
 
-  - **200**: Certificates retrieved
+- **200**: Certificates retrieved
 
 ---
 
@@ -299,14 +324,16 @@
 - **Description:** يقوم بإنشاء شهادة جديدة للطالب بعد إتمامه الكورس بنسبة 100%.
 
 **English Details:** يقوم بإنشاء شهادة جديدة للطالب لكورس محدد، ولكن فقط إذا كان نسبة تقدمه في الكورس 100%. يستخدم عند ضغط الطالب على زر (استخراج الشهادة) بعد إنهاء الكورس.
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `courseId` (string): 
+  - `courseId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -321,7 +348,7 @@
 }
 ```
 
-  - **201**: Certificate claimed successfully
+- **201**: Certificate claimed successfully
 
 ---
 
@@ -331,6 +358,7 @@
 - **Description:** بناء قسم جديد للكورس (مثل: الفصل الأول).
 
 **English Details:** Create a new section
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
@@ -338,14 +366,17 @@
 - **Path Parameters:**
   - `courseId` (string): Course UUID
 - **Request Body:**
+
 ```json
 {
   "title": "string",
   "sequence_order": "integer"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -361,12 +392,12 @@
 }
 ```
 
-  - **201**: Section created successfully
-  - **400**: Validation error or Duplicate title
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not instructor or admin)
-  - **404**: Course not found
-  - **500**: Server error
+- **201**: Section created successfully
+- **400**: Validation error or Duplicate title
+- **401**: Unauthorized
+- **403**: Forbidden (Not instructor or admin)
+- **404**: Course not found
+- **500**: Server error
 
 ---
 
@@ -376,6 +407,7 @@
 - **Description:** تغيير مسمى القسم (تعديل).
 
 **English Details:** Update a section
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
@@ -384,14 +416,17 @@
   - `courseId` (string): Course UUID
   - `sectionId` (string): Section UUID
 - **Request Body:**
+
 ```json
 {
   "title": "string",
   "sequence_order": "integer"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -407,12 +442,12 @@
 }
 ```
 
-  - **200**: Section updated successfully
-  - **400**: Validation error or Duplicate title
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not instructor or admin)
-  - **404**: Course or Section not found
-  - **500**: Server error
+- **200**: Section updated successfully
+- **400**: Validation error or Duplicate title
+- **401**: Unauthorized
+- **403**: Forbidden (Not instructor or admin)
+- **404**: Course or Section not found
+- **500**: Server error
 
 ---
 
@@ -422,6 +457,7 @@
 - **Description:** حذف القسم بالكامل (مدربين).
 
 **English Details:** Delete a section
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
@@ -431,6 +467,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -440,12 +477,12 @@
 }
 ```
 
-  - **200**: Section deleted successfully
-  - **400**: Validation error
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not instructor or admin)
-  - **404**: Course or Section not found
-  - **500**: Server error
+- **200**: Section deleted successfully
+- **400**: Validation error
+- **401**: Unauthorized
+- **403**: Forbidden (Not instructor or admin)
+- **404**: Course or Section not found
+- **500**: Server error
 
 ---
 
@@ -455,6 +492,7 @@
 - **Description:** السماح للطالب فقط بتقييم الكورس من 1 إلى 5 نجوم.
 
 **English Details:** Add a review to a course
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
@@ -462,14 +500,17 @@
 - **Path Parameters:**
   - `id` (string): Course UUID
 - **Request Body:**
+
 ```json
 {
   "rating": "integer",
   "comment": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -487,11 +528,11 @@
 }
 ```
 
-  - **201**: Review created successfully
-  - **400**: Validation error
-  - **401**: Unauthorized (Token missing/invalid)
-  - **403**: Forbidden (Not a student, not enrolled, or already reviewed)
-  - **404**: Course not found
+- **201**: Review created successfully
+- **400**: Validation error
+- **401**: Unauthorized (Token missing/invalid)
+- **403**: Forbidden (Not a student, not enrolled, or already reviewed)
+- **404**: Course not found
 
 ---
 
@@ -510,6 +551,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -537,9 +579,9 @@
 }
 ```
 
-  - **200**: Reviews retrieved successfully
-  - **400**: Validation error
-  - **404**: Course not found
+- **200**: Reviews retrieved successfully
+- **400**: Validation error
+- **404**: Course not found
 
 ---
 
@@ -555,14 +597,17 @@
   - `id` (string): Course UUID
   - `reviewId` (string): Review UUID
 - **Request Body:**
+
 ```json
 {
   "rating": "integer",
   "comment": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -577,11 +622,11 @@
 }
 ```
 
-  - **200**: Review updated successfully
-  - **400**: Validation error
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not the owner of the review)
-  - **404**: Review not found
+- **200**: Review updated successfully
+- **400**: Validation error
+- **401**: Unauthorized
+- **403**: Forbidden (Not the owner of the review)
+- **404**: Review not found
 
 ---
 
@@ -598,6 +643,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -607,12 +653,12 @@
 }
 ```
 
-  - **200**: Review deleted successfully
-  - **400**: Validation error
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not the owner of the review)
-  - **404**: Review not found
-  - **500**: Server error
+- **200**: Review deleted successfully
+- **400**: Validation error
+- **401**: Unauthorized
+- **403**: Forbidden (Not the owner of the review)
+- **404**: Review not found
+- **500**: Server error
 
 ---
 
@@ -626,6 +672,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -636,7 +683,7 @@
 }
 ```
 
-  - **200**: Unread count retrieved
+- **200**: Unread count retrieved
 
 ---
 
@@ -650,6 +697,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -661,7 +709,7 @@
 }
 ```
 
-  - **200**: All marked as read successfully
+- **200**: All marked as read successfully
 
 ---
 
@@ -681,6 +729,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -697,7 +746,7 @@
 }
 ```
 
-  - **200**: Notifications list retrieved
+- **200**: Notifications list retrieved
 
 ---
 
@@ -711,6 +760,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -720,7 +770,7 @@
 }
 ```
 
-  - **200**: All notifications deleted
+- **200**: All notifications deleted
 
 ---
 
@@ -732,10 +782,11 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -750,8 +801,8 @@
 }
 ```
 
-  - **200**: Notification details
-  - **404**: Notification not found or expired
+- **200**: Notification details
+- **404**: Notification not found or expired
 
 ---
 
@@ -763,10 +814,11 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -776,7 +828,7 @@
 }
 ```
 
-  - **200**: Notification deleted
+- **200**: Notification deleted
 
 ---
 
@@ -788,10 +840,11 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -804,7 +857,7 @@
 }
 ```
 
-  - **200**: Marked as read
+- **200**: Marked as read
 
 ---
 
@@ -814,6 +867,7 @@
 - **Description:** إضافة درس جديد وتحديد ترتيبه (Sequence).
 
 **English Details:** Create a new lesson
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
@@ -822,6 +876,7 @@
   - `courseId` (string): Course UUID
   - `sectionId` (string): Section UUID
 - **Request Body:**
+
 ```json
 {
   "title": "string",
@@ -831,8 +886,10 @@
   "sequence_order": "integer"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -851,12 +908,12 @@
 }
 ```
 
-  - **201**: Lesson created successfully
-  - **400**: Validation error or duplicate title
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not instructor or admin)
-  - **404**: Course or section not found
-  - **500**: Server error
+- **201**: Lesson created successfully
+- **400**: Validation error or duplicate title
+- **401**: Unauthorized
+- **403**: Forbidden (Not instructor or admin)
+- **404**: Course or section not found
+- **500**: Server error
 
 ---
 
@@ -866,15 +923,17 @@
 - **Description:** تعديل تفاصيل أو فيديو الدرس.
 
 **English Details:** Update a lesson
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Path Parameters:**
-  - `courseId` (string): 
-  - `sectionId` (string): 
-  - `lessonId` (string): 
+  - `courseId` (string):
+  - `sectionId` (string):
+  - `lessonId` (string):
 - **Request Body:**
+
 ```json
 {
   "title": "string",
@@ -884,8 +943,10 @@
   "sequence_order": "integer"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -900,12 +961,12 @@
 }
 ```
 
-  - **200**: Lesson updated successfully
-  - **400**: Validation error or duplicate title
-  - **401**: Unauthorized
-  - **403**: Forbidden
-  - **404**: Course, Section, or Lesson not found
-  - **500**: Server error
+- **200**: Lesson updated successfully
+- **400**: Validation error or duplicate title
+- **401**: Unauthorized
+- **403**: Forbidden
+- **404**: Course, Section, or Lesson not found
+- **500**: Server error
 
 ---
 
@@ -915,16 +976,18 @@
 - **Description:** حذف الدرس بشكل نهائي.
 
 **English Details:** Delete a lesson
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `courseId` (string): 
-  - `sectionId` (string): 
-  - `lessonId` (string): 
+  - `courseId` (string):
+  - `sectionId` (string):
+  - `lessonId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -934,12 +997,12 @@
 }
 ```
 
-  - **200**: Lesson deleted successfully
-  - **400**: Validation error
-  - **401**: Unauthorized
-  - **403**: Forbidden
-  - **404**: Course, Section, or Lesson not found
-  - **500**: Server error
+- **200**: Lesson deleted successfully
+- **400**: Validation error
+- **401**: Unauthorized
+- **403**: Forbidden
+- **404**: Course, Section, or Lesson not found
+- **500**: Server error
 
 ---
 
@@ -953,6 +1016,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -968,7 +1032,7 @@
 }
 ```
 
-  - **200**: Profile data
+- **200**: Profile data
 
 ---
 
@@ -982,6 +1046,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -995,7 +1060,7 @@
 }
 ```
 
-  - **200**: Dashboard stats
+- **200**: Dashboard stats
 
 ---
 
@@ -1007,14 +1072,15 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (integer): 
-  - `limit` (integer): 
-  - `search` (string): 
-  - `sort` (string): 
-  - `order` (string): 
+  - `page` (integer):
+  - `limit` (integer):
+  - `search` (string):
+  - `sort` (string):
+  - `order` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1030,7 +1096,7 @@
 }
 ```
 
-  - **200**: Paginated courses
+- **200**: Paginated courses
 
 ---
 
@@ -1042,10 +1108,11 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `courseId` (string): 
+  - `courseId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1059,7 +1126,7 @@
 }
 ```
 
-  - **200**: Course statistics
+- **200**: Course statistics
 
 ---
 
@@ -1071,10 +1138,11 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `period` (string): 
+  - `period` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1088,7 +1156,7 @@
 }
 ```
 
-  - **200**: Revenue statistics
+- **200**: Revenue statistics
 
 ---
 
@@ -1100,14 +1168,15 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (string): 
-  - `limit` (string): 
-  - `search` (string): 
-  - `sort` (string): 
-  - `order` (string): 
+  - `page` (string):
+  - `limit` (string):
+  - `search` (string):
+  - `sort` (string):
+  - `order` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1123,7 +1192,7 @@
 }
 ```
 
-  - **200**: Paginated students
+- **200**: Paginated students
 
 ---
 
@@ -1135,11 +1204,12 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (string): 
-  - `limit` (string): 
+  - `page` (string):
+  - `limit` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1155,7 +1225,7 @@
 }
 ```
 
-  - **200**: Latest enrollments
+- **200**: Latest enrollments
 
 ---
 
@@ -1167,14 +1237,15 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (string): 
-  - `limit` (string): 
-  - `search` (string): 
-  - `sort` (string): 
-  - `order` (string): 
+  - `page` (string):
+  - `limit` (string):
+  - `search` (string):
+  - `sort` (string):
+  - `order` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1202,67 +1273,308 @@
 }
 ```
 
-  - **200**: Paginated reviews
+- **200**: Paginated reviews
 
 ---
 
-## Get all home page data (Aggregated)
+## Get static structural configuration (Shell)
 
-- **Endpoint:** `GET /api/home`
-- **Description:** هذا الـ API مخصص لجلب كافة بيانات الصفحة الرئيسية في طلب واحد لتقليل عدد الطلبات (Requests).
-
-**English Details:** هذا الـ API مخصص لجلب كافة بيانات الصفحة الرئيسية (Hero, Categories, Featured Courses, Top Instructors, Statistics, Testimonials) في طلب واحد (Single Request). تم إنشاؤه لتقليل عدد الـ Requests من الفرونت اند وتحسين سرعة تحميل الصفحة الرئيسية (Fast Initial Load).
+- **Endpoints:** `GET /api/home` & `GET /api/home/config`
+- **Description:** هذا الـ API مخصص لجلب كافة البيانات الثابتة والأساسية للصفحة الرئيسية في طلب واحد لضمان أسرع وقت تحميل (First Contentful Paint) بدون انتظار معالجة الكورسات والتقييمات الحركية التي يتم تحميلها لاحقاً بطريقة Lazy-Loading أو عند الفتح. يرجع الـ JSON كافة الأقسام الثابتة: `hero`, `why_choose_us`, `partners`, `footer`, `settings`.
+- **English Details:** Returns all static shell sections of the Home Page in one single optimized response (`hero`, `why_choose_us`, `partners`, `footer`, `settings`). Supported via both `/api/home` and `/api/home/config`.
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
+    "hero": {
+      "title": "طور مستقبلك مع أفضل الدبلومات التقنية",
+      "subtitle": "تعلم من خبراء المجال من خلال مشاريع عملية، متابعة Mentors، وشهادات معتمدة تؤهلك لسوق العمل.",
+      "primary_button": { "text": "استكشف الكورسات", "url": "/courses" },
+      "secondary_button": { "text": "اعرف المزيد", "url": "/about" },
+      "background_image": "https://res.cloudinary.com/trmszuqg/image/upload/v1785559343/1000149988_gciucp.jpg",
+      "students_count": 12500,
+      "courses_count": 10,
+      "instructors_count": 8,
+      "rating": 4.9
     },
-    "updated_at": "2026-07-25T18:00:00.000Z"
+    "why_choose_us": [
+      {
+        "id": "expert",
+        "title": "Expert Instructors",
+        "description": "Learn from senior engineers."
+      },
+      {
+        "id": "projects",
+        "title": "Real Projects",
+        "description": "Build production-grade systems."
+      },
+      {
+        "id": "mentorship",
+        "title": "Live Mentorship",
+        "description": "Weekly interactive Q&A sessions."
+      },
+      {
+        "id": "career",
+        "title": "Career Readiness",
+        "description": "Mock interviews & portfolio reviews."
+      }
+    ],
+    "partners": [
+      {
+        "name": "Microsoft Enterprise Ecosystem",
+        "logo": "https://res.cloudinary.com/trmszuqg/image/upload/v1785559343/1000149988_gciucp.jpg",
+        "category": "Cloud & Azure Solutions"
+      }
+    ],
+    "settings": {
+      "platform_name": "StudyFlow",
+      "support_email": "support@studyflow.com",
+      "support_phone": "+201000000000",
+      "currency": "EGP",
+      "locale": "ar-EG",
+      "maintenance_mode": false,
+      "social_links": {
+        "facebook": "https://facebook.com/studyflow",
+        "youtube": "https://youtube.com/@studyflow",
+        "linkedin": "https://linkedin.com/company/studyflow"
+      }
+    },
+    "footer": {
+      "companyName": "StudyFlow",
+      "description": "منصة تعليمية متخصصة في تقديم دبلومات تقنية احترافية تساعد الطلاب على اكتساب المهارات المطلوبة لسوق العمل.",
+      "email": "support@studyflow.com",
+      "phone": "+20 100 123 4567"
+    }
   },
-  "requestId": "req-uuid-single-entity"
+  "requestId": "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890"
 }
 ```
 
-  - **200**: Home data retrieved successfully
+- **200**: Static configuration retrieved successfully
+
+---
+
+## Get search bar suggestions
+
+- **Endpoint:** `GET /api/home/search-suggestions`
+- **Description:** يجلب اقتراحات البحث الفورية לשريط البحث في الفرونت إند. عند فراغ الاستعلام (Empty query) يعيد أعلى 5 كورسات شعبية ومبيعاً، وعند الكتابة الفورية يفرز العناوين (Title only) للحصول على أقصى سرعة استجابة وبدون تفاصيل طويلة مثل description.
+- **English Details:** Returns instant autocomplete search suggestions. If query is empty, defaults to Top 5 Popular courses (with image, price, title, slug/id). If query is provided, performs prefix/title filtering.
+- **Token Required:** No
+- **Headers:** None
+- **Query Parameters:**
+  - `q` (optional, string) - النص المكتوب في شريط البحث.
+- **Response:**
+  - **Example Return Object (JSON Schema):**
+
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "course_uuid",
+      "title": "Full-Stack Node.js & React Diploma",
+      "price": 4500,
+      "discount_price": 3200,
+      "thumbnail": "https://res.cloudinary.com/.../thumb.webp"
+    }
+  ],
+  "requestId": "s1g2s3g4-s5e6-7890-a1b2-c3d4e5f67890"
+}
+```
+
+- **200**: Search suggestions retrieved successfully
+
+---
+
+## Get platform technology partners
+
+- **Endpoint:** `GET /api/home/partners`
+- **Description:** يجلب قائمة بالشركات التكنولوجية والشركاء (Partners & Ecosystems) التي تتعاون معها المنصة لزيادة الثقة والاعتماديّة.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - **Example Return Object (JSON Schema):**
+
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "name": "Microsoft Enterprise Ecosystem",
+      "logo": "https://res.cloudinary.com/trmszuqg/image/upload/v1785559343/1000149988_gciucp.jpg",
+      "category": "Cloud & Azure Solutions"
+    }
+  ],
+  "requestId": "e2a1c3b4-d5e6-7890-a1b2-c3d4e5f67890"
+}
+```
+
+- **200**: Partners retrieved successfully
 
 ---
 
 ## Get Hero section data
 
 - **Endpoint:** `GET /api/home/hero`
-- **Description:** يجلب بيانات القسم الأول في الصفحة الرئيسية (Hero Section) والذي يتضمن العنوان الرئيسي، الوصف، والروابط السريعة. مخصص للفرونت اند في حال الرغبة بتحميل هذا الجزء بشكل منفصل.
+- **Description:** يجلب بيانات القسم الأول في الصفحة الرئيسية (Hero Section) والذي يتضمن العنوان الرئيسي، الوصف، وأرقام وإحصائيات المنصة السريعة.
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
-    },
-    "updated_at": "2026-07-25T18:00:00.000Z"
+    "title": "Learn Today, Build Your Future",
+    "subtitle": "Join thousands of students learning with expert instructors through practical courses and real-world projects.",
+    "primary_button": "Explore Courses",
+    "secondary_button": "Become an Instructor",
+    "background_image": "https://res.cloudinary.com/trmszuqg/image/upload/v1785559343/1000149988_gciucp.jpg",
+    "students_count": 12500,
+    "courses_count": 250,
+    "instructors_count": 35
   },
-  "requestId": "req-uuid-single-entity"
+  "requestId": "b2c3d4e5-f6a1-7890-b2c3-d4e5f67890a1"
 }
 ```
 
-  - **200**: Hero data retrieved
+- **200**: Hero data retrieved
+
+---
+
+## Get Platform Features (Why Choose Us)
+
+- **Endpoint:** `GET /api/home/why-choose-us` (Alias: `GET /api/home/platform`)
+- **Description:** يجلب مزايا المنصة والمميزات الخاصة بها (Why Choose Us) لتعزيز ثقة الزائر بالشهادات، أسلوب المشاريع التطبيقية، والوصول مدى الحياة.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - **Example Return Object (JSON Schema):**
+
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "expert",
+      "title": "Expert Instructors",
+      "description": "Learn directly from senior engineers and active field practitioners."
+    },
+    {
+      "id": "projects",
+      "title": "Real Projects",
+      "description": "Build production-grade systems and portfolio-ready applications."
+    },
+    {
+      "id": "mentorship",
+      "title": "Live Mentorship",
+      "description": "Weekly interactive Q&A sessions, code reviews, and continuous learning guidance."
+    },
+    {
+      "id": "career",
+      "title": "Career Readiness",
+      "description": "Mock technical interviews, CV polishing, and portfolio reviews."
+    }
+  ],
+  "requestId": "c1a2b3c4-d5e6-7890-c1a2-c3d4e5f67890"
+}
+```
+
+- **200**: Why Choose Us features retrieved successfully
+
+---
+
+## Get featured courses
+
+- **Endpoint:** `GET /api/home/featured-courses`
+- **Description:** يجلب قائمة بالدبلومات المميزة والأكثر تفاعلاً على المنصة لعرضها في قسم المختار لكم.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - **Example Return Object (JSON Schema):**
+
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "c1a2b3c4-d5e6-7890-a1b2-c3d4e5f67890",
+      "title": "Back-End (Node.js & Express) Diploma",
+      "slug": "back-end-node-js-express-diploma",
+      "price": 8500,
+      "discount_price": 7200,
+      "rating": 4.9,
+      "reviews_count": 12,
+      "students_count": 45,
+      "duration_weeks": "17 أسبوع",
+      "duration_hours": "120 ساعة",
+      "projects_count": "6 مشاريع",
+      "thumbnail": "https://res.cloudinary.com/trmszuqg/image/upload/v1785557519/1000150009_meduhn.jpg",
+      "card_image": "https://res.cloudinary.com/trmszuqg/image/upload/v1785557556/backend_node_js_xa2rne.webp",
+      "instructor": {
+        "name": "Mohamed Hassan",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb"
+      }
+    }
+  ],
+  "requestId": "d4e5f6a1-b2c3-7890-d4e5-f67890a1b2c3"
+}
+```
+
+- **200**: Featured courses retrieved
+
+---
+
+## Get top rated courses
+
+- **Endpoint:** `GET /api/home/top-rated-courses`
+- **Description:** يجلب قائمة الكورسات الأعلى تقييماً بناءً على التقييم الفعلي لطلاب المنصة (من جدول التقييمات في قاعدة البيانات)، مرتبة تنازلياً حسب متوسط التقييم.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - Returns array of Course format JSON matching `featured-courses`.
+
+- **200**: Top rated courses retrieved successfully
+
+---
+
+## Get popular courses by enrollment volume
+
+- **Endpoint:** `GET /api/home/popular-courses`
+- **Description:** يجلب قائمة الكورسات الأكثر شعبية وإقبالاً بناءً على عدد التسجيلات الفعلية (Enrollments count) في قاعدة البيانات.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - Returns array of Course format JSON matching `featured-courses`.
+
+- **200**: Popular courses retrieved successfully
+
+---
+
+## Get newest published courses
+
+- **Endpoint:** `GET /api/home/new-courses`
+- **Description:** يجلب أحدث الدبلومات التي تم إضافتها ونشرها على المنصة، مرتبة حسب تاريخ الإنشاء.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - Returns array of Course format JSON matching `featured-courses`.
+
+- **200**: Newest courses retrieved successfully
 
 ---
 
@@ -1271,56 +1583,31 @@
 - **Endpoint:** `GET /api/home/categories`
 - **Description:** يجلب قائمة بأهم التصنيفات (Categories) مع عدد الكورسات المتاحة في كل تصنيف. يستخدم في الصفحة الرئيسية لعرض الأقسام الشائعة للطلاب للبحث والتصفح السريع.
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
+  "status": "success",
+  "data": [
+    {
+      "id": "4b6c310b-857e-4054-9457-3f338d388711",
+      "name": "Web Development",
+      "courses_count": 5
     },
-    "updated_at": "2026-07-25T18:00:00.000Z"
-  },
-  "requestId": "req-uuid-single-entity"
+    {
+      "id": "9a1b223c-457e-4054-9457-3f338d388222",
+      "name": "Data Science & AI",
+      "courses_count": 2
+    }
+  ],
+  "requestId": "c3d4e5f6-a1b2-7890-c3d4-e5f67890a1b2"
 }
 ```
 
-  - **200**: Categories retrieved
-
----
-
-## Get featured courses
-
-- **Endpoint:** `GET /api/home/featured-courses`
-- **Description:** يجلب قائمة بأفضل أو أحدث الكورسات المميزة. يستخدم في الفرونت اند لعرض شريط تمرير (Carousel) يلفت انتباه الطالب للكورسات الأعلى تقييماً أو الأكثر مبيعاً.
-- **Token Required:** No
-- **Headers:**
-  - None
-- **Request Body:** None
-- **Response:**
-  - **Example Return Object (JSON Schema):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
-    },
-    "updated_at": "2026-07-25T18:00:00.000Z"
-  },
-  "requestId": "req-uuid-single-entity"
-}
-```
-
-  - **200**: Featured courses retrieved
+- **200**: Categories retrieved
 
 ---
 
@@ -1329,56 +1616,55 @@
 - **Endpoint:** `GET /api/home/top-instructors`
 - **Description:** يجلب بيانات أفضل المدربين في المنصة بناءً على التقييمات وعدد الطلاب. مفيد في الصفحة الرئيسية لزيادة الثقة (Social Proof) وتشجيع الطلاب على التسجيل.
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
-    },
-    "updated_at": "2026-07-25T18:00:00.000Z"
-  },
-  "requestId": "req-uuid-single-entity"
+  "status": "success",
+  "data": [
+    {
+      "id": "11111111-a83a-4ef8-bb6d-6bb9bd380a11",
+      "full_name": "Mohamed Hassan",
+      "profile_picture": "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
+      "bio": "Lead Software Architect with 12+ years building enterprise scalable Node.js applications.",
+      "_count": { "courses_taught": 3 }
+    }
+  ],
+  "requestId": "e5f6a1b2-c3d4-7890-e5f6-7890a1b2c3d4"
 }
 ```
 
-  - **200**: Top instructors retrieved
+- **200**: Top instructors retrieved
 
 ---
 
 ## Get platform statistics
 
 - **Endpoint:** `GET /api/home/statistics`
-- **Description:** يجلب إحصائيات عامة عن المنصة مثل (إجمالي الكورسات، عدد الطلاب النشطين، إجمالي المدربين). تُستخدم في الفرونت اند في قسم الأرقام لتعزيز مصداقية المنصة أمام الزوار.
+- **Description:** يجلب إحصائيات عامة عن المنصة مثل (عدد الطلاب النشطين، إجمالي الكورسات، المدربين، وعدد الشهادات المعتمدة المصدرة).
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
-    },
-    "updated_at": "2026-07-25T18:00:00.000Z"
+    "students": 12500,
+    "courses": 250,
+    "instructors": 35,
+    "certificates": 8200
   },
-  "requestId": "req-uuid-single-entity"
+  "requestId": "f6a1b2c3-d4e5-7890-f6a1-7890a1b2c3d4"
 }
 ```
 
-  - **200**: Statistics retrieved
+- **200**: Statistics retrieved
 
 ---
 
@@ -1387,27 +1673,31 @@
 - **Endpoint:** `GET /api/home/testimonials`
 - **Description:** يجلب آراء وتقييمات الطلاب السابقين. يستخدم في الفرونت اند لزيادة الثقة والمبيعات (Testimonials Section).
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
-    },
-    "updated_at": "2026-07-25T18:00:00.000Z"
-  },
-  "requestId": "req-uuid-single-entity"
+  "status": "success",
+  "data": [
+    {
+      "id": "rev-uuid-0011",
+      "rating": 5,
+      "comment": "الدبلومة غيرت مساري المهني بالكامل، الشرح ممتاز والتطبيق العملي على أنظمة الحضور والغياب والمشاريع كان السبب رئيسي في قبولي في وظيفتي الأولى!",
+      "created_at": "2026-07-10T14:20:00.000Z",
+      "student": {
+        "full_name": "Ahmed Mostafa",
+        "profile_picture": "https://cloud-storage.example.com/profiles/avatar1.jpg"
+      }
+    }
+  ],
+  "requestId": "a1b2c3d4-7890-e5f6-a1b2-c3d4e5f67890"
 }
 ```
 
-  - **200**: Testimonials retrieved
+- **200**: Testimonials retrieved
 
 ---
 
@@ -1416,27 +1706,63 @@
 - **Endpoint:** `GET /api/home/faq`
 - **Description:** يجلب الأسئلة الشائعة وإجاباتها. يستخدم في صفحة الأسئلة الشائعة أو في نهاية الصفحة الرئيسية للرد على استفسارات الزوار المعتادة.
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
+  "status": "success",
+  "data": [
+    {
+      "question": "How do I enroll in a course?",
+      "answer": "Simply register an account, browse our diplomas, and click 'Add to Cart' or enroll instantly."
     },
-    "updated_at": "2026-07-25T18:00:00.000Z"
-  },
-  "requestId": "req-uuid-single-entity"
+    {
+      "question": "Do you offer verifiable certificates?",
+      "answer": "Yes, upon course completion, you receive a digital certificate equipped with a unique Credential ID."
+    }
+  ],
+  "requestId": "b2c3d4e5-7890-a1b2-b2c3-d4e5f67890a1"
 }
 ```
 
-  - **200**: FAQs retrieved
+- **200**: FAQs retrieved
+
+---
+
+## Get Site Settings (General Platform Metadata)
+
+- **Endpoint:** `GET /api/home/settings` (Alias: `GET /api/home/platform-info`)
+- **Description:** يجلب البيانات العامة للمنصة (الاسم، الشعار، أرقام الدعم الفني، البريد الإلكتروني، وروابط حسابات السوشيال ميديا) لتجنب تثبيتها يدوياً في كود الفرونت إند.
+- **Token Required:** No
+- **Headers:** None
+- **Request Body:** None
+- **Response:**
+  - **Example Return Object (JSON Schema):**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "platform_name": "StudyFlow",
+    "support_email": "support@studyflow.com",
+    "support_phone": "+201000000000",
+    "currency": "EGP",
+    "locale": "ar-EG",
+    "maintenance_mode": false,
+    "social_links": {
+      "facebook": "https://facebook.com/studyflow",
+      "youtube": "https://youtube.com/@studyflow",
+      "linkedin": "https://linkedin.com/company/studyflow"
+    }
+  },
+  "requestId": "e5f67890-a1b2-c3d4-e5f6-7890a1b2c3d4"
+}
+```
+
+- **200**: Site settings metadata retrieved
 
 ---
 
@@ -1445,27 +1771,35 @@
 - **Endpoint:** `GET /api/home/footer`
 - **Description:** يجلب الروابط السريعة، معلومات التواصل، وروابط السوشيال ميديا الخاصة بأسفل الصفحة (Footer).
 - **Token Required:** No
-- **Headers:**
-  - None
+- **Headers:** None
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
-    "id": "entity-uuid-8899",
-    "name": "Entity Details Object",
-    "metadata": {
-      "attribute": "value"
+    "logo": "https://res.cloudinary.com/trmszuqg/image/upload/v1785559347/1000149993_lijztj.jpg",
+    "description": "StudyFlow is the premier training powerhouse designed to bridge the gap between academic learning and high-level enterprise software engineering.",
+    "quickLinks": [
+      { "label": "About Us", "url": "/about" },
+      { "label": "Browse Courses", "url": "/courses" },
+      { "label": "Verify Certificate", "url": "/verify-certificate" },
+      { "label": "Support & FAQs", "url": "/faq" }
+    ],
+    "socialLinks": {
+      "facebook": "https://facebook.com/studyflow",
+      "linkedin": "https://linkedin.com/company/studyflow",
+      "youtube": "https://youtube.com/@studyflow"
     },
-    "updated_at": "2026-07-25T18:00:00.000Z"
+    "copyright": "© 2026 StudyFlow. All rights reserved."
   },
-  "requestId": "req-uuid-single-entity"
+  "requestId": "c3d4e5f6-7890-b2c3-c3d4-e5f67890a1b2"
 }
 ```
 
-  - **200**: Footer data retrieved
+- **200**: Footer data retrieved
 
 ---
 
@@ -1479,6 +1813,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1494,9 +1829,9 @@
 }
 ```
 
-  - **200**: List of favorite courses retrieved successfully
-  - **401**: Unauthorized
-  - **403**: Forbidden
+- **200**: List of favorite courses retrieved successfully
+- **401**: Unauthorized
+- **403**: Forbidden
 
 ---
 
@@ -1506,14 +1841,16 @@
 - **Description:** إضافة الكورس للحفظ لشرائه لاحقاً.
 
 **English Details:** Add a course to favorites
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `courseId` (string): 
+  - `courseId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1527,9 +1864,9 @@
 }
 ```
 
-  - **200**: Course added to favorites successfully
-  - **401**: Unauthorized
-  - **404**: Course not found or not published
+- **200**: Course added to favorites successfully
+- **401**: Unauthorized
+- **404**: Course not found or not published
 
 ---
 
@@ -1539,14 +1876,16 @@
 - **Description:** إلغاء الكورس من المفضلة.
 
 **English Details:** Remove a course from favorites
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `courseId` (string): 
+  - `courseId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1556,8 +1895,8 @@
 }
 ```
 
-  - **200**: Course removed from favorites successfully
-  - **401**: Unauthorized
+- **200**: Course removed from favorites successfully
+- **401**: Unauthorized
 
 ---
 
@@ -1569,10 +1908,11 @@
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `courseId` (string): 
+  - `courseId` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1588,8 +1928,8 @@
 }
 ```
 
-  - **200**: Favorite status retrieved successfully
-  - **401**: Unauthorized
+- **200**: Favorite status retrieved successfully
+- **401**: Unauthorized
 
 ---
 
@@ -1599,10 +1939,12 @@
 - **Description:** بدء إضافة كورس جديد (مسودة) للمدرب.
 
 **English Details:** Create a new course
+
 - **Token Required:** No
 - **Headers:**
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "title": "string",
@@ -1613,11 +1955,20 @@
   "discount_price": "number",
   "level": "string",
   "language": "string",
+  "duration_hours": "number",
+  "duration_weeks": "number",
+  "projects_count": "number",
+  "thumbnail": "https://res.cloudinary.com/.../thumb.webp",
+  "card_image": "https://res.cloudinary.com/.../card.webp",
+  "cover_image": "https://res.cloudinary.com/.../cover.webp",
+  "preview_video": "https://...",
   "status": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1631,8 +1982,8 @@
 }
 ```
 
-  - **201**: Course created successfully
-  - **400**: Validation error or Instructor/Category not found
+- **201**: Course created successfully
+- **400**: Validation error or Instructor/Category not found
 
 ---
 
@@ -1659,6 +2010,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1666,6 +2018,9 @@
     {
       "id": "item-uuid-001",
       "title": "Example Portfolio Entity Item",
+      "duration_hours": 120,
+      "duration_weeks": 16,
+      "projects_count": 6,
       "created_at": "2026-07-25T10:00:00.000Z",
       "status": "ACTIVE"
     },
@@ -1686,7 +2041,7 @@
 }
 ```
 
-  - **200**: List of courses retrieved successfully
+- **200**: List of courses retrieved successfully
 
 ---
 
@@ -1701,16 +2056,22 @@
 - **Path Parameters:**
   - `id` (string): Course UUID
 - **Request Body:**
+
 ```json
 {
   "title": "string",
   "description": "string",
   "price": "number",
-  "discount_price": "number"
+  "discount_price": "number",
+  "duration_hours": "number",
+  "duration_weeks": "number",
+  "projects_count": "number"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1724,11 +2085,11 @@
 }
 ```
 
-  - **200**: Course updated successfully
-  - **400**: Invalid inputs or category not found
-  - **401**: Unauthorized (Token missing/invalid)
-  - **403**: Forbidden (Not Admin or owner Instructor)
-  - **404**: Course not found
+- **200**: Course updated successfully
+- **400**: Invalid inputs or category not found
+- **401**: Unauthorized (Token missing/invalid)
+- **403**: Forbidden (Not Admin or owner Instructor)
+- **404**: Course not found
 
 ---
 
@@ -1738,6 +2099,7 @@
 - **Description:** مسح الكورس من قبل المدرب (طالما لم يمتلكه طلاب).
 
 **English Details:** Delete a course
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
@@ -1746,6 +2108,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1755,11 +2118,11 @@
 }
 ```
 
-  - **200**: Course deleted successfully
-  - **400**: Foreign key relation violation or bad request
-  - **401**: Unauthorized (Token missing/invalid)
-  - **403**: Forbidden (Not Admin or owner Instructor)
-  - **404**: Course not found
+- **200**: Course deleted successfully
+- **400**: Foreign key relation violation or bad request
+- **401**: Unauthorized (Token missing/invalid)
+- **403**: Forbidden (Not Admin or owner Instructor)
+- **404**: Course not found
 
 ---
 
@@ -1775,12 +2138,16 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
   "data": {
     "id": "entity-uuid-8899",
     "name": "Entity Details Object",
+    "duration_hours": 120,
+    "duration_weeks": 16,
+    "projects_count": 6,
     "metadata": {
       "attribute": "value"
     },
@@ -1790,9 +2157,9 @@
 }
 ```
 
-  - **200**: Course details retrieved successfully
-  - **400**: Invalid UUID format
-  - **404**: Course not found
+- **200**: Course details retrieved successfully
+- **400**: Invalid UUID format
+- **404**: Course not found
 
 ---
 
@@ -1808,6 +2175,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1821,10 +2189,10 @@
 }
 ```
 
-  - **200**: Rating summary retrieved successfully
-  - **400**: Invalid UUID format
-  - **404**: Course not found
-  - **500**: Server error
+- **200**: Rating summary retrieved successfully
+- **400**: Invalid UUID format
+- **404**: Course not found
+- **500**: Server error
 
 ---
 
@@ -1842,6 +2210,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1857,10 +2226,10 @@
 }
 ```
 
-  - **200**: Related courses retrieved successfully
-  - **400**: Invalid UUID format
-  - **404**: Course not found
-  - **500**: Server error
+- **200**: Related courses retrieved successfully
+- **400**: Invalid UUID format
+- **404**: Course not found
+- **500**: Server error
 
 ---
 
@@ -1874,6 +2243,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1901,7 +2271,7 @@
 }
 ```
 
-  - **200**: List of categories
+- **200**: List of categories
 
 ---
 
@@ -1911,19 +2281,22 @@
 - **Description:** إضافة تصنيف جديد بواسطة الإدارة.
 
 **English Details:** Create a new category
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
-  "name": "string",
-  "icon": "string"
+  "name": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1937,7 +2310,7 @@
 }
 ```
 
-  - **201**: Category created
+- **201**: Category created
 
 ---
 
@@ -1947,14 +2320,16 @@
 - **Description:** عرض تفاصيل التصنيف والمقررات التابعة له.
 
 **English Details:** Get category by ID
+
 - **Token Required:** No
 - **Headers:**
   - None
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -1970,8 +2345,8 @@
 }
 ```
 
-  - **200**: Category details
-  - **404**: Category not found
+- **200**: Category details
+- **404**: Category not found
 
 ---
 
@@ -1984,16 +2359,18 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:**
+
 ```json
 {
-  "name": "string",
-  "icon": "string"
+  "name": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2007,7 +2384,7 @@
 }
 ```
 
-  - **200**: Category updated
+- **200**: Category updated
 
 ---
 
@@ -2017,14 +2394,16 @@
 - **Description:** حذف التصنيف كلياً.
 
 **English Details:** Delete a category
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2034,7 +2413,7 @@
 }
 ```
 
-  - **204**: Category deleted
+- **204**: Category deleted
 
 ---
 
@@ -2047,13 +2426,16 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "courseId": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2067,12 +2449,12 @@
 }
 ```
 
-  - **200**: Course added to cart successfully
-  - **400**: Already enrolled
-  - **401**: Unauthorized
-  - **403**: Forbidden (Not a student)
-  - **404**: Course not found or not published
-  - **409**: Course is already in the cart
+- **200**: Course added to cart successfully
+- **400**: Already enrolled
+- **401**: Unauthorized
+- **403**: Forbidden (Not a student)
+- **404**: Course not found or not published
+- **409**: Course is already in the cart
 
 ---
 
@@ -2088,6 +2470,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2097,10 +2480,10 @@
 }
 ```
 
-  - **200**: Course removed from cart successfully
-  - **401**: Unauthorized
-  - **403**: Forbidden
-  - **404**: Item not found in cart
+- **200**: Course removed from cart successfully
+- **401**: Unauthorized
+- **403**: Forbidden
+- **404**: Item not found in cart
 
 ---
 
@@ -2114,6 +2497,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2129,9 +2513,9 @@
 }
 ```
 
-  - **200**: Cart details retrieved successfully
-  - **401**: Unauthorized
-  - **403**: Forbidden
+- **200**: Cart details retrieved successfully
+- **401**: Unauthorized
+- **403**: Forbidden
 
 ---
 
@@ -2143,6 +2527,7 @@
 - **Headers:**
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "full_name": "string",
@@ -2150,8 +2535,10 @@
   "password": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2165,8 +2552,8 @@
 }
 ```
 
-  - **201**: User registered successfully
-  - **400**: Bad request (e.g., email already exists)
+- **201**: User registered successfully
+- **400**: Bad request (e.g., email already exists)
 
 ---
 
@@ -2178,14 +2565,17 @@
 - **Headers:**
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "email": "string",
   "password": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2199,9 +2589,9 @@
 }
 ```
 
-  - **200**: Logged in successfully
-  - **401**: Invalid credentials
-  - **403**: Account suspended or deleted
+- **200**: Logged in successfully
+- **401**: Invalid credentials
+- **403**: Account suspended or deleted
 
 ---
 
@@ -2215,6 +2605,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2228,7 +2619,7 @@
 }
 ```
 
-  - **200**: Logged out successfully
+- **200**: Logged out successfully
 
 ---
 
@@ -2242,6 +2633,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2257,7 +2649,7 @@
 }
 ```
 
-  - **200**: Returns user ID and Role
+- **200**: Returns user ID and Role
 
 ---
 
@@ -2270,14 +2662,17 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "current_password": "string",
   "new_password": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2291,9 +2686,9 @@
 }
 ```
 
-  - **200**: Password updated successfully
-  - **400**: Validation Error
-  - **403**: Forbidden (Incorrect current password or password reuse)
+- **200**: Password updated successfully
+- **400**: Validation Error
+- **403**: Forbidden (Incorrect current password or password reuse)
 
 ---
 
@@ -2307,6 +2702,7 @@
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2320,9 +2716,9 @@
 }
 ```
 
-  - **200**: Dashboard statistics retrieved successfully
-  - **401**: Unauthorized
-  - **403**: Forbidden (Admin only)
+- **200**: Dashboard statistics retrieved successfully
+- **401**: Unauthorized
+- **403**: Forbidden (Admin only)
 
 ---
 
@@ -2335,6 +2731,7 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "full_name": "string",
@@ -2343,8 +2740,10 @@
   "role": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2358,9 +2757,9 @@
 }
 ```
 
-  - **201**: User created successfully
-  - **403**: Forbidden (Cannot assign ADMIN role)
-  - **409**: Conflict (Email already exists)
+- **201**: User created successfully
+- **403**: Forbidden (Cannot assign ADMIN role)
+- **409**: Conflict (Email already exists)
 
 ---
 
@@ -2370,20 +2769,22 @@
 - **Description:** قائمة بكل المستخدمين مع فلترة وتنقيب للآدمن.
 
 **English Details:** Get all users (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (integer): 
-  - `limit` (integer): 
-  - `search` (string): 
-  - `sort` (string): 
-  - `order` (string): 
-  - `role` (string): 
-  - `status` (string): 
+  - `page` (integer):
+  - `limit` (integer):
+  - `search` (string):
+  - `sort` (string):
+  - `order` (string):
+  - `role` (string):
+  - `status` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2411,7 +2812,7 @@
 }
 ```
 
-  - **200**: Users retrieved successfully
+- **200**: Users retrieved successfully
 
 ---
 
@@ -2424,15 +2825,18 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:**
+
 ```json
 {
   "status": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2446,10 +2850,10 @@
 }
 ```
 
-  - **200**: Status updated successfully
-  - **403**: Forbidden
-  - **404**: Not Found
-  - **409**: Conflict
+- **200**: Status updated successfully
+- **403**: Forbidden
+- **404**: Not Found
+- **409**: Conflict
 
 ---
 
@@ -2459,14 +2863,16 @@
 - **Description:** عرض تفاصيل حساب المستخدم بشكل كامل للمشرف.
 
 **English Details:** Get User Details (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2482,8 +2888,8 @@
 }
 ```
 
-  - **200**: User details retrieved successfully
-  - **404**: User not found
+- **200**: User details retrieved successfully
+- **404**: User not found
 
 ---
 
@@ -2493,14 +2899,16 @@
 - **Description:** حذف حساب المستخدم بشكل كامل وصارم.
 
 **English Details:** Delete User (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2510,9 +2918,9 @@
 }
 ```
 
-  - **200**: User account deactivated successfully
-  - **403**: Forbidden (Escalation or self-deletion)
-  - **404**: User not found
+- **200**: User account deactivated successfully
+- **403**: Forbidden (Escalation or self-deletion)
+- **404**: User not found
 
 ---
 
@@ -2522,20 +2930,24 @@
 - **Description:** ترقية أو تعديل صلاحيات المستخدمين (مثال: تحويل طالب لمدرب).
 
 **English Details:** Update User Role (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:**
+
 ```json
 {
   "role": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2549,10 +2961,10 @@
 }
 ```
 
-  - **200**: Role updated successfully
-  - **403**: Forbidden (Escalation or self-modification)
-  - **404**: User not found
-  - **409**: Role already applied
+- **200**: Role updated successfully
+- **403**: Forbidden (Escalation or self-modification)
+- **404**: User not found
+- **409**: Role already applied
 
 ---
 
@@ -2562,14 +2974,16 @@
 - **Description:** إجبار إعادة تعيين كلمة المرور كإجراء أمنـي.
 
 **English Details:** Reset User Password (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2583,9 +2997,9 @@
 }
 ```
 
-  - **200**: Password reset successfully
-  - **403**: Forbidden (Escalation or self-reset)
-  - **404**: User not found
+- **200**: Password reset successfully
+- **403**: Forbidden (Escalation or self-reset)
+- **404**: User not found
 
 ---
 
@@ -2595,14 +3009,16 @@
 - **Description:** مراقبة متى ومن قام بتغيير صلاحيات المستخدم.
 
 **English Details:** Get User Role History (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2618,8 +3034,8 @@
 }
 ```
 
-  - **200**: History retrieved successfully
-  - **404**: User not found
+- **200**: History retrieved successfully
+- **404**: User not found
 
 ---
 
@@ -2629,21 +3045,23 @@
 - **Description:** الإشراف والاطلاع على كل الكورسات في النظام.
 
 **English Details:** Get all courses (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (integer): 
-  - `limit` (integer): 
-  - `search` (string): 
-  - `sort` (string): 
-  - `order` (string): 
-  - `status` (string): 
-  - `category` (string): 
-  - `instructor` (string): 
+  - `page` (integer):
+  - `limit` (integer):
+  - `search` (string):
+  - `sort` (string):
+  - `order` (string):
+  - `status` (string):
+  - `category` (string):
+  - `instructor` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2659,7 +3077,7 @@
 }
 ```
 
-  - **200**: Courses retrieved successfully
+- **200**: Courses retrieved successfully
 
 ---
 
@@ -2669,20 +3087,24 @@
 - **Description:** نشر أو رفض الكورسات الجديدة للحفاظ على جودة المحتوى.
 
 **English Details:** Update Course Status (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:**
+
 ```json
 {
   "status": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2696,7 +3118,7 @@
 }
 ```
 
-  - **200**: Status updated successfully
+- **200**: Status updated successfully
 
 ---
 
@@ -2706,20 +3128,22 @@
 - **Description:** الإشراف ومراقبة كل تقييمات المنصة.
 
 **English Details:** Get all reviews (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `page` (integer): 
-  - `limit` (integer): 
-  - `search` (string): 
-  - `sort` (string): 
-  - `order` (string): 
-  - `rating` (integer): 
-  - `status` (string): 
+  - `page` (integer):
+  - `limit` (integer):
+  - `search` (string):
+  - `sort` (string):
+  - `order` (string):
+  - `rating` (integer):
+  - `status` (string):
 - **Request Body:** None
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2747,7 +3171,7 @@
 }
 ```
 
-  - **200**: Reviews retrieved successfully
+- **200**: Reviews retrieved successfully
 
 ---
 
@@ -2757,20 +3181,24 @@
 - **Description:** إخفاء التقييمات المضللة أو المسيئة.
 
 **English Details:** Update Review Status (Admin)
+
 - **Token Required:** Yes (Authorization Bearer Token)
 - **Headers:**
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Path Parameters:**
-  - `id` (string): 
+  - `id` (string):
 - **Request Body:**
+
 ```json
 {
   "status": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2784,7 +3212,7 @@
 }
 ```
 
-  - **200**: Status updated successfully
+- **200**: Status updated successfully
 
 ---
 
@@ -2797,6 +3225,7 @@
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Request Body:**
+
 ```json
 {
   "title": "string",
@@ -2805,8 +3234,10 @@
   "action_url": "string"
 }
 ```
+
 - **Response:**
   - **Example Return Object (JSON Schema):**
+
 ```json
 {
   "success": true,
@@ -2820,7 +3251,192 @@
 }
 ```
 
-  - **201**: Notification broadcasted
+- **201**: Notification broadcasted
 
 ---
 
+## Selective Lecture Dispatch & Student Classroom Management (Interactive Cohorts)
+
+### 1. Add Lesson with Selective Student Target (Instructor)
+- **Endpoint:** `POST /api/courses/:courseId/sections/:sectionId/lessons`
+- **Description:** يسمح للمدرس بإضافة محاضرة جديدة سواء لكل المشتركين أو تخصيصها لمجموعة محددة من الطلاب المشتركين في الكورس (بإدخال أرقامهم في `target_student_ids`). يتم إرسال إشعار فوري للطلاب المستهدفين.
+- **Token Required:** Yes (`INSTRUCTOR` or `ADMIN`)
+- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+- **Request Body Example:**
+```json
+{
+  "title": "React Hooks Live Recording (Session 2)",
+  "duration": 3600,
+  "video_url": "https://res.cloudinary.com/studyflow/video/upload/v12345/lesson2.mp4",
+  "is_free_preview": false,
+  "target_student_ids": [
+    "cddfa21a-4c20-4e08-9b88-5c1a7d6e8f11",
+    "fdeba32a-5c20-4e08-9b88-5c1a7d6e8f22"
+  ]
+}
+```
+- **Response (201 Created):**
+```json
+{
+  "status": "success",
+  "message": "Lesson added successfully",
+  "data": {
+    "id": "aaa111-bbb222-ccc333",
+    "title": "React Hooks Live Recording (Session 2)",
+    "duration": 3600,
+    "video_url": "https://res.cloudinary.com/...",
+    "sequence_order": 2,
+    "is_free_preview": false,
+    "is_targeted": true,
+    "accessible_to": [
+      { "student_id": "cddfa21a-4c20-4e08-9b88-5c1a7d6e8f11" },
+      { "student_id": "fdeba32a-5c20-4e08-9b88-5c1a7d6e8f22" }
+    ]
+  }
+}
+```
+
+---
+
+### 2. Revoke Student Enrollment (Instructor Dashboard)
+- **Endpoint:** `PATCH /api/instructor/courses/:courseId/students/:studentId/revoke`
+- **Description:** يتيح للإنستراكتور تجميد/إلغاء اشتراك طالب في كورس معين (بتحويل الحالة إلى `REVOKED`) وإرسال إشعار فوري له، مع حفظ الفاتورة المالية والطلب في قاعدة البيانات دون حذف.
+- **Token Required:** Yes (`INSTRUCTOR`)
+- **Headers:** `Authorization: Bearer <token>`
+- **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "message": "Student enrollment revoked successfully",
+  "data": {
+    "id": "enrollment-uuid-001",
+    "student_id": "student-uuid-001",
+    "course_id": "course-uuid-001",
+    "status": "REVOKED"
+  }
+}
+```
+
+---
+
+### 3. Unified Student Classroom API (Student Dashboard)
+- **Endpoint:** `GET /api/student-dashboard/courses/:courseId/classroom`
+- **Description:** يجلب واجهة الدراسة الموحدة للطالب في الكورس، شاملة بيانات حسابه، تفاصيل الكورس، إحصائيات ونسبة تقدمه المحسوبة حصرياً على المحاضرات المتاحة له، ومحاضرة الاستئناف (`last_watched_lesson_id`)، بالإضافة لقائمة الدروس (العامة + الدروس المخصصة له خصيصاً).
+- **Token Required:** Yes (`STUDENT` enrolled in the course)
+- **Headers:** `Authorization: Bearer <token>`
+- **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "data": {
+    "student_info": {
+      "id": "student-uuid-001",
+      "full_name": "أحمد علي",
+      "email": "ahmed@student.studyflow.com",
+      "enrolled_at": "2026-08-01T10:00:00.000Z",
+      "enrollment_status": "ACTIVE"
+    },
+    "course_info": {
+      "id": "course-uuid-001",
+      "title": "Front-End Development (React.js & Tailwind CSS)",
+      "description": "Comprehensive interactive bootcamp...",
+      "level": "BEGINNER",
+      "language": "Arabic"
+    },
+    "progress_metrics": {
+      "progress_percentage": 50.0,
+      "completed_lessons_count": 1,
+      "total_accessible_lessons": 2,
+      "last_watched_lesson_id": "lesson-1-uuid",
+      "completed_lesson_ids": ["lesson-1-uuid"],
+      "completed_at": null
+    },
+    "curriculum": [
+      {
+        "section_id": "section-1-uuid",
+        "title": "Week 1 - React Fundamentals",
+        "sequence_order": 1,
+        "lessons": [
+          {
+            "lesson_id": "lesson-1-uuid",
+            "title": "Introduction to JSX & VDOM",
+            "duration": 3000,
+            "video_url": "https://...",
+            "sequence_order": 1,
+            "is_free_preview": true,
+            "is_targeted": false,
+            "is_completed": true,
+            "watch_position_seconds": 3000,
+            "last_watched_at": "2026-08-01T12:00:00.000Z"
+          },
+          {
+            "lesson_id": "lesson-2-uuid",
+            "title": "React Hooks Live Recording (Session 2)",
+            "duration": 3600,
+            "video_url": "https://...",
+            "sequence_order": 2,
+            "is_free_preview": false,
+            "is_targeted": true,
+            "is_completed": false,
+            "watch_position_seconds": 450,
+            "last_watched_at": "2026-08-01T14:30:00.000Z"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Universal User Profile API (Backend-Managed Avatar Upload)
+
+### 1. Get User Profile
+- **Endpoint:** `GET /api/user/profile` (or `/api/users/profile`)
+- **Description:** يجلب بيانات الملف الشخصي الكاملة للمستخدم الحالي.
+- **Token Required:** Yes (`Bearer Token` in Authorization header)
+- **Response:**
+```json
+{
+  "id": "uuid-string",
+  "email": "student@studyflow.com",
+  "full_name": "Ahmed Ali",
+  "role": "STUDENT",
+  "status": "ACTIVE",
+  "bio": "Frontend Developer & React Enthusiast",
+  "avatar_url": "https://res.cloudinary.com/trmszuqg/image/upload/v12345/avatars/uuid/filename.webp",
+  "created_at": "2026-08-01T10:00:00.000Z"
+}
+```
+
+### 2. Update User Profile (Backend-Managed File Upload)
+- **Endpoint:** `PUT /api/user/profile` (or `/api/users/profile`)
+- **Description:** تحديث بيانات الملف الشخصي (الاسم، السيرة الذاتية) مع خيار إرفاق وصيانة صورة البروفايل مباشرة عبر ملف مادي كـ `multipart/form-data`. يتولى الباك اند الرفع المباشر إلى خوادم سحابية (Cloudinary) مع قص الصورة (300x300 Face Crop) وتحويلها التلقائي لصيغة `WebP` فائقة الجودة، ومن ثم التحديث التلقائي وحذف الصورة السحابة القديمة إن وجد بأمان.
+- **Token Required:** Yes (`Bearer Token` in Authorization header)
+- **Content-Type:** `multipart/form-data`
+- **Form Data Fields:**
+  - `avatar` (File, Optional): ملف الصورة بصيغة JPEG أو PNG أو WebP بحد أقصى 5MB. يتم فحصه أمنياً عبر **Magic Bytes Signature Validation**.
+  - `full_name` (String, Optional): الاسم الكامل الجديد.
+  - `bio` (String, Optional): نبذة تعريفية للمستخدم.
+- **Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "id": "uuid-string",
+    "email": "student@studyflow.com",
+    "full_name": "Ahmed Ali (Updated)",
+    "role": "STUDENT",
+    "status": "ACTIVE",
+    "bio": "Senior Frontend Engineer & Instructor",
+    "avatar_url": "https://res.cloudinary.com/trmszuqg/image/upload/v1785559999/avatars/user-id/uuid.webp",
+    "updated_at": "2026-08-03T12:00:00.000Z"
+  }
+}
+```
+- **Error Responses:**
+  - `400 Bad Request`: "Unsupported file format. Only JPEG, PNG, and WebP images are allowed." (أو التلاعب بالتوقيع الثماني للملف - Magic Bytes Mismatch).
+  - `413 Payload Too Large`: عندما يولد المتصفح ملفاً فوق سعة 5MB.
+  - `401 Unauthorized`: التوكين مفقود أو انتهت صلاحيته.

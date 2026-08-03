@@ -104,7 +104,12 @@ export class FavoriteService {
                 description: true,
                 price: true,
                 status: true,
-                // Assuming we might have image/thumbnail, include basic fields
+                duration_hours: true,
+                duration_weeks: true,
+                projects_count: true,
+                thumbnail: true,
+                card_image: true,
+                cover_image: true,
               },
             },
           },

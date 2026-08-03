@@ -6,7 +6,8 @@ import { validate } from '../middlewares/validate.middleware';
 import { 
   instructorPaginationSchema, 
   instructorRevenueSchema, 
-  instructorCourseStatsSchema 
+  instructorCourseStatsSchema,
+  instructorRevokeStudentSchema
 } from '../validators/instructor.validator';
 
 const router = Router();
@@ -146,12 +147,19 @@ router.get('/revenue', validate(instructorRevenueSchema), InstructorController.g
  *       - in: query
  *         name: search
  *       - in: query
+ *         name: course_id
+ *         schema:
+ *           type: string
+ *         description: Filter students enrolled in a specific course
+ *       - in: query
  *         name: sort
  *       - in: query
  *         name: order
  *     responses:
  *       200:
  *         description: Paginated students
+ *       403:
+ *         description: Forbidden
  */
 router.get('/students', validate(instructorPaginationSchema), InstructorController.getStudents);
 
@@ -196,7 +204,41 @@ router.get('/enrollments/latest', validate(instructorPaginationSchema), Instruct
  *     responses:
  *       200:
  *         description: Paginated reviews
+ *       403:
+ *         description: Forbidden
  */
 router.get('/reviews', validate(instructorPaginationSchema), InstructorController.getReviews);
+
+/**
+ * @swagger
+ * /api/instructor/courses/{courseId}/students/{studentId}/revoke:
+ *   patch:
+ *     summary: Revoke a student's enrollment from a course
+ *     description: يتيح للإنستراكتور تجميد/إلغاء اشتراك طالب في كورس معين (بتحويل الحالة إلى REVOKED) وإرسال إشعار فوري له، مع حفظ الفاتورة المالية في قاعدة البيانات بدون حذف.
+ *     tags: [Instructor Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: studentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Enrollment revoked successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Enrollment or Course not found
+ *       409:
+ *         description: Enrollment already revoked
+ */
+router.patch('/courses/:courseId/students/:studentId/revoke', validate(instructorRevokeStudentSchema), InstructorController.revokeStudent);
 
 export default router;

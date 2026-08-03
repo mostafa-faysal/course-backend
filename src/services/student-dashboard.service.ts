@@ -68,19 +68,37 @@ export class StudentDashboardService {
       where: { student_id: studentId, status: EnrollmentStatus.ACTIVE },
       include: {
         course: {
-          include: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            thumbnail: true,
+            card_image: true,
+            cover_image: true,
             _count: {
               select: { sections: true }
             },
             sections: {
-              include: {
-                _count: { select: { lessons: true } }
+              select: {
+                _count: {
+                  select: {
+                    lessons: {
+                      where: {
+                        OR: [
+                          { is_targeted: false },
+                          { accessible_to: { some: { student_id: studentId } } }
+                        ]
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         },
         lesson_progress: {
-          where: { is_completed: true }
+          where: { is_completed: true },
+          select: { id: true }
         }
       },
       orderBy: { enrolled_at: 'desc' }
@@ -96,6 +114,8 @@ export class StudentDashboardService {
         title: enrollment.course.title,
         description: enrollment.course.description,
         thumbnail: enrollment.course.thumbnail,
+        card_image: enrollment.course.card_image,
+        cover_image: enrollment.course.cover_image,
         progressPercentage,
         enrolledAt: enrollment.enrolled_at,
         completedLessons,
@@ -118,9 +138,32 @@ export class StudentDashboardService {
         last_watched_at: { not: null }
       },
       orderBy: { last_watched_at: 'desc' },
-      include: {
+      select: {
+        watch_position_seconds: true,
+        last_watched_at: true,
+        lesson_id: true,
         lesson: {
-          include: { section: { include: { course: true } } }
+          select: {
+            id: true,
+            title: true,
+            section_id: true,
+            section: {
+              select: {
+                id: true,
+                title: true,
+                course_id: true,
+                course: {
+                  select: {
+                    id: true,
+                    title: true,
+                    thumbnail: true,
+                    card_image: true,
+                    cover_image: true,
+                  }
+                }
+              }
+            }
+          }
         }
       }
     });
@@ -130,6 +173,9 @@ export class StudentDashboardService {
     return {
       courseId: lastProgress.lesson.section.course_id,
       courseTitle: lastProgress.lesson.section.course.title,
+      thumbnail: lastProgress.lesson.section.course.thumbnail,
+      card_image: lastProgress.lesson.section.course.card_image,
+      cover_image: lastProgress.lesson.section.course.cover_image,
       sectionId: lastProgress.lesson.section_id,
       sectionTitle: lastProgress.lesson.section.title,
       lessonId: lastProgress.lesson_id,
@@ -178,7 +224,22 @@ export class StudentDashboardService {
       include: {
         course: { 
           include: { 
-            sections: { include: { _count: { select: { lessons: true } } } } 
+            sections: {
+              include: {
+                _count: {
+                  select: {
+                    lessons: {
+                      where: {
+                        OR: [
+                          { is_targeted: false },
+                          { accessible_to: { some: { student_id: studentId } } }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            } 
           } 
         },
         lesson_progress: { where: { is_completed: true } }
@@ -208,5 +269,152 @@ export class StudentDashboardService {
     await NotificationHelper.sendCertificateIssued(studentId, certificate.id, enrollment.course.title);
 
     return certificate;
+  }
+
+  /**
+   * Unified Student Classroom API: returns student info, course info, progress tracking, and accessible curriculum.
+   */
+  public static async getStudentClassroom(studentId: string, courseId: string) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { student_id_course_id: { student_id: studentId, course_id: courseId } },
+      select: {
+        status: true,
+        enrolled_at: true,
+        progress_percentage: true,
+        completed_at: true,
+        student: {
+          select: { id: true, full_name: true, email: true, profile_picture: true }
+        },
+        course_progress: {
+          select: { last_watched_lesson_id: true }
+        },
+        lesson_progress: {
+          select: { lesson_id: true, is_completed: true, watch_position_seconds: true, last_watched_at: true }
+        }
+      }
+    });
+
+    if (!enrollment || enrollment.status !== EnrollmentStatus.ACTIVE) {
+      throw new Error('Forbidden: You do not have an active enrollment in this course');
+    }
+
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        level: true,
+        language: true,
+        thumbnail: true,
+        cover_image: true,
+        instructor: {
+          select: { id: true, full_name: true, profile_picture: true }
+        },
+        sections: {
+          orderBy: { sequence_order: 'asc' },
+          select: {
+            id: true,
+            title: true,
+            sequence_order: true,
+            lessons: {
+              where: {
+                OR: [
+                  { is_targeted: false },
+                  { accessible_to: { some: { student_id: studentId } } }
+                ]
+              },
+              orderBy: { sequence_order: 'asc' },
+              select: {
+                id: true,
+                title: true,
+                duration: true,
+                video_url: true,
+                is_free_preview: true,
+                is_targeted: true,
+                sequence_order: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!course) {
+      throw new Error('Not Found: Course not found');
+    }
+
+    const progressMap = new Map();
+    enrollment.lesson_progress.forEach((p) => {
+      progressMap.set(p.lesson_id, p);
+    });
+
+    let totalLessons = 0;
+    let completedLessonsCount = 0;
+    const completedLessonIds: string[] = [];
+
+    const curriculum = course.sections.map((section) => {
+      const lessons = section.lessons.map((lesson) => {
+        totalLessons++;
+        const p = progressMap.get(lesson.id);
+        const isCompleted = p?.is_completed || false;
+        const watchPosition = p?.watch_position_seconds || 0;
+        if (isCompleted) {
+          completedLessonsCount++;
+          completedLessonIds.push(lesson.id);
+        }
+        return {
+          lesson_id: lesson.id,
+          title: lesson.title,
+          duration: lesson.duration,
+          video_url: lesson.video_url,
+          sequence_order: lesson.sequence_order,
+          is_free_preview: lesson.is_free_preview,
+          is_targeted: lesson.is_targeted,
+          is_completed: isCompleted,
+          watch_position_seconds: watchPosition,
+          last_watched_at: p?.last_watched_at || null
+        };
+      });
+
+      return {
+        section_id: section.id,
+        title: section.title,
+        sequence_order: section.sequence_order,
+        lessons
+      };
+    });
+
+    const calculatedPercentage = totalLessons === 0 ? 0 : Math.round((completedLessonsCount / totalLessons) * 100 * 100) / 100;
+
+    return {
+      student_info: {
+        id: enrollment.student.id,
+        full_name: enrollment.student.full_name,
+        email: enrollment.student.email,
+        profile_picture: enrollment.student.profile_picture,
+        enrolled_at: enrollment.enrolled_at,
+        enrollment_status: enrollment.status
+      },
+      course_info: {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        level: course.level,
+        language: course.language,
+        thumbnail: course.thumbnail,
+        cover_image: course.cover_image,
+        instructor: course.instructor
+      },
+      progress_metrics: {
+        progress_percentage: calculatedPercentage,
+        completed_lessons_count: completedLessonsCount,
+        total_accessible_lessons: totalLessons,
+        last_watched_lesson_id: enrollment.course_progress?.last_watched_lesson_id || null,
+        completed_lesson_ids: completedLessonIds,
+        completed_at: enrollment.completed_at
+      },
+      curriculum
+    };
   }
 }

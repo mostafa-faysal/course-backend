@@ -76,12 +76,13 @@ export class InstructorController {
   public static async getStudents(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const instructorId = req.user!.id;
-      const { page, limit, search, sort, order } = req.query;
+      const { page, limit, search, course_id, sort, order } = req.query;
       const students = await InstructorService.getStudents(
         instructorId,
         Number(page),
         Number(limit),
         search as string,
+        course_id as string,
         sort as string,
         order as string
       );
@@ -120,6 +121,20 @@ export class InstructorController {
       );
       res.json({ status: 'success', data: reviews });
     } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async revokeStudent(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const instructorId = req.user!.id;
+      const { courseId, studentId } = req.params;
+      const result = await InstructorService.revokeStudentEnrollment(instructorId, courseId as string, studentId as string);
+      res.status(200).json({ status: 'success', message: 'Student enrollment revoked successfully', data: result });
+    } catch (error: any) {
+      if (error.message.includes('Forbidden')) return res.status(403).json({ status: 'error', message: error.message });
+      if (error.message.includes('Not Found')) return res.status(404).json({ status: 'error', message: error.message });
+      if (error.message.includes('Conflict')) return res.status(409).json({ status: 'error', message: error.message });
       next(error);
     }
   }

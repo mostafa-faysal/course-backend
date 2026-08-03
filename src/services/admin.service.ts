@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma, Role, UserStatus, CourseStatus, ReviewStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { NotificationHelper } from '../helpers/notification.helper';
+import { cache, CACHE_TAGS } from '../cache';
 
 const prisma = new PrismaClient();
 
@@ -198,6 +199,7 @@ export class AdminService {
     const generatedPassword = data.password || crypto.randomBytes(8).toString('hex');
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(generatedPassword, salt);
+    const defaultAvatar = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(data.full_name)}`;
 
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -205,6 +207,7 @@ export class AdminService {
           full_name: data.full_name,
           email: data.email,
           password_hash,
+          profile_picture: defaultAvatar,
           role: data.role,
           status: 'ACTIVE'
         },
@@ -212,6 +215,7 @@ export class AdminService {
           id: true,
           full_name: true,
           email: true,
+          profile_picture: true,
           role: true,
           status: true,
           created_at: true
@@ -384,7 +388,7 @@ export class AdminService {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { [sort]: order },
-        select: { id: true, title: true, price: true, status: true, created_at: true, category: { select: { name: true } }, instructor: { select: { full_name: true, email: true } } }
+        select: { id: true, title: true, price: true, thumbnail: true, card_image: true, cover_image: true, status: true, duration_hours: true, duration_weeks: true, projects_count: true, created_at: true, category: { select: { name: true } }, instructor: { select: { full_name: true, email: true } } }
       }),
       prisma.course.count({ where }),
       prisma.course.groupBy({ by: ['status'], _count: { id: true } })
@@ -393,8 +397,8 @@ export class AdminService {
     let totalCourses = 0, publishedCourses = 0, draftCourses = 0;
     coursesGroup.forEach(g => {
       totalCourses += g._count.id;
-      if (g.status === 'PUBLISHED') publishedCourses += g._count.id;
-      if (g.status === 'DRAFT') draftCourses += g._count.id;
+      if (g.status === CourseStatus.PUBLISHED) publishedCourses += g._count.id;
+      if (g.status === CourseStatus.DRAFT) draftCourses += g._count.id;
     });
 
     return {
@@ -420,11 +424,20 @@ export class AdminService {
       select: { id: true, title: true, status: true, instructor_id: true }
     });
 
-    if (newStatus === 'PUBLISHED') {
+    if (newStatus === CourseStatus.PUBLISHED) {
       await NotificationHelper.sendCourseApproved(updated.instructor_id, courseId, updated.title);
-    } else if (newStatus === 'REJECTED') {
+    } else if (newStatus === CourseStatus.REJECTED) {
       await NotificationHelper.sendCourseRejected(updated.instructor_id, courseId, updated.title);
     }
+
+    await Promise.all([
+      cache.invalidateByTag(CACHE_TAGS.HOME_FEATURED),
+      cache.invalidateByTag(CACHE_TAGS.HOME_POPULAR),
+      cache.invalidateByTag(CACHE_TAGS.HOME_TOP_RATED),
+      cache.invalidateByTag(CACHE_TAGS.HOME_NEW),
+      cache.invalidateByTag(CACHE_TAGS.HOME_STATISTICS),
+      cache.invalidateByTag(CACHE_TAGS.SEARCH_SUGGESTIONS),
+    ]);
 
     return updated;
   }
@@ -452,8 +465,8 @@ export class AdminService {
     let approvedReviews = 0, hiddenReviews = 0;
     // We only have APPROVED and HIDDEN in ReviewStatus.
     reviewsGroup.forEach(g => {
-      if (g.status === 'APPROVED') approvedReviews += g._count.id;
-      if (g.status === 'HIDDEN') hiddenReviews += g._count.id;
+      if (g.status === ReviewStatus.APPROVED) approvedReviews += g._count.id;
+      if (g.status === ReviewStatus.HIDDEN) hiddenReviews += g._count.id;
     });
 
     return {
@@ -484,6 +497,12 @@ export class AdminService {
       data: { status: newStatus },
       select: { id: true, rating: true, status: true }
     });
+
+    await Promise.all([
+      cache.invalidateByTag(CACHE_TAGS.HOME_TOP_RATED),
+      cache.invalidateByTag(CACHE_TAGS.HOME_TESTIMONIALS),
+    ]);
+
     return updated;
   }
 }

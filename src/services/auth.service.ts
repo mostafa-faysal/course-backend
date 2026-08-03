@@ -22,12 +22,14 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(data.password, salt);
 
-    // Create user with default role STUDENT
+    // Create user with default role STUDENT and initials avatar
+    const defaultAvatar = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(data.full_name)}`;
     const user = await prisma.user.create({
       data: {
         full_name: data.full_name,
         email: data.email,
         password_hash: passwordHash,
+        profile_picture: defaultAvatar,
         role: Role.STUDENT,
         status: UserStatus.ACTIVE
       }

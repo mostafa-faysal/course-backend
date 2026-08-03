@@ -87,6 +87,11 @@ export class EnrollmentService {
             id: true,
             title: true,
             thumbnail: true,
+            card_image: true,
+            cover_image: true,
+            duration_hours: true,
+            duration_weeks: true,
+            projects_count: true,
             instructor: {
               select: {
                 id: true,

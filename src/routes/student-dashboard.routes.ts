@@ -115,4 +115,29 @@ router.get('/certificates', StudentDashboardController.getCertificates);
  */
 router.post('/certificates/:courseId', StudentDashboardController.claimCertificate);
 
+/**
+ * @swagger
+ * /api/student-dashboard/courses/{courseId}/classroom:
+ *   get:
+ *     summary: Get unified student learning view and classroom data
+ *     description: يعيد بيانات الطالب وبيانات الكورس ومكانه في المشاهدة (Progress) وقائمة بالمحاضرات التي تم تفويضها وإرسالها لحساب الطالب حصرياً (سواء العامة أو التي اختارها الإنستراكتور له خصيصاً).
+ *     tags: [Student Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Classroom view retrieved successfully
+ *       403:
+ *         description: Forbidden - No active enrollment
+ *       404:
+ *         description: Course not found
+ */
+router.get('/courses/:courseId/classroom', StudentDashboardController.getClassroom);
+
 export default router;

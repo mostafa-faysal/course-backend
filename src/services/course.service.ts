@@ -1,8 +1,21 @@
 import { Course, Section, Lesson, Prisma, CourseStatus, ReviewStatus } from '@prisma/client';
 import { prisma } from '../config/db';
 import { NotificationHelper } from '../helpers/notification.helper';
+import { cache, CACHE_TAGS } from '../cache';
 
 export class CourseService {
+  private static async invalidateCourseCaches() {
+    await Promise.all([
+      cache.invalidateByTag(CACHE_TAGS.HOME_FEATURED),
+      cache.invalidateByTag(CACHE_TAGS.HOME_POPULAR),
+      cache.invalidateByTag(CACHE_TAGS.HOME_TOP_RATED),
+      cache.invalidateByTag(CACHE_TAGS.HOME_NEW),
+      cache.invalidateByTag(CACHE_TAGS.HOME_STATISTICS),
+      cache.invalidateByTag(CACHE_TAGS.HOME_CATEGORIES),
+      cache.invalidateByTag(CACHE_TAGS.HOME_INSTRUCTORS),
+      cache.invalidateByTag(CACHE_TAGS.SEARCH_SUGGESTIONS),
+    ]);
+  }
   /**
    * Create a new course
    */
@@ -30,11 +43,17 @@ export class CourseService {
       title: data.title,
       description: data.description,
       thumbnail: data.thumbnail,
+      card_image: data.card_image,
+      cover_image: data.cover_image,
       preview_video: data.preview_video,
+      preview_image: data.preview_image,
       price: data.price,
       discount_price: data.discount_price,
       level: data.level,
       language: data.language,
+      duration_hours: data.duration_hours,
+      duration_weeks: data.duration_weeks,
+      projects_count: data.projects_count,
       status: data.status,
       requirements: data.requirements || [],
       learning_outcomes: data.learning_outcomes || [],
@@ -55,6 +74,7 @@ export class CourseService {
       }
     }
 
+    await this.invalidateCourseCaches();
     return course;
   }
 
@@ -117,7 +137,23 @@ export class CourseService {
       orderBy,
       skip: (page - 1) * limit,
       take: limit,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        discount_price: true,
+        thumbnail: true,
+        card_image: true,
+        cover_image: true,
+        preview_image: true,
+        level: true,
+        language: true,
+        duration_hours: true,
+        duration_weeks: true,
+        projects_count: true,
+        status: true,
+        created_at: true,
         instructor: { select: { id: true, full_name: true, profile_picture: true } },
         category: { select: { id: true, name: true } },
         _count: {
@@ -160,22 +196,28 @@ export class CourseService {
       }
     }
 
-    return prisma.course.update({
+    const updated = await prisma.course.update({
       where: { id },
       data,
       include: {
         category: true,
       },
     });
+
+    await this.invalidateCourseCaches();
+    return updated;
   }
 
   /**
    * Delete a course by ID
    */
   public static async deleteCourse(id: string) {
-    return prisma.course.delete({
+    const deleted = await prisma.course.delete({
       where: { id },
     });
+
+    await this.invalidateCourseCaches();
+    return deleted;
   }
 
   /**
@@ -276,7 +318,12 @@ export class CourseService {
         price: true,
         discount_price: true,
         thumbnail: true,
+        card_image: true,
+        cover_image: true,
         level: true,
+        duration_hours: true,
+        duration_weeks: true,
+        projects_count: true,
         instructor: {
           select: {
             id: true,
@@ -289,6 +336,7 @@ export class CourseService {
             enrollments: true,
             reviews: {
               where: { status: ReviewStatus.APPROVED }
+
             }
           }
         }
